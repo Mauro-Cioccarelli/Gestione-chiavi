@@ -1,0 +1,23 @@
+# ============================================================================
+# Protezione cartella ajax - Solo richieste XMLHttpRequest
+# ============================================================================
+
+# Permetti accesso solo a richieste AJAX
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Permetti se header X-Requested-With è XMLHttpRequest
+    RewriteCond %{HTTP:X-Requested-With} !XMLHttpRequest
+    RewriteCond %{HTTP:X-CSRF-TOKEN} !^.+$
+    RewriteRule ^.*$ - [F,L]
+</IfModule>
+
+# Fallback per Apache senza mod_rewrite
+<IfModule !mod_rewrite.c>
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</IfModule>
+
+# Disabilita directory listing
+Options -Indexes

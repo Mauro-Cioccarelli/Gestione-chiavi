@@ -1,0 +1,27 @@
+# ============================================================================
+# Protezione cartella migrations
+# ============================================================================
+
+# Permetti accesso solo a start.php e index.php
+<FilesMatch "^(start|index)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</FilesMatch>
+
+# Blocca tutti gli altri file
+<FilesMatch "^.*\.(sql|php)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# Blocca accesso diretto a file SQL
+<FilesMatch "\.sql$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# Disabilita directory listing
+Options -Indexes

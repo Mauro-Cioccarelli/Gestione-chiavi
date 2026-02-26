@@ -1,0 +1,200 @@
+<?php
+/**
+ * Gestione Chiavi - Inventario
+ */
+
+define('APP_ROOT', true);
+require_once __DIR__ . '/../includes/bootstrap.php';
+
+require_login();
+
+$pageTitle = 'Inventario Chiavi';
+$extraJs = [asset('js/chiavi.js')];
+
+// Ottieni categorie per select
+$db = db();
+$categories = $db->query("SELECT id, name FROM key_categories WHERE deleted_at IS NULL ORDER BY name ASC")->fetchAll();
+
+include __DIR__ . '/../includes/layout/header.php';
+?>
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="bi bi-key me-2"></i><?= htmlspecialchars($pageTitle) ?>
+                </h2>
+                <?php if (has_role(ROLE_ADMIN)): ?>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNewKey">
+                    <i class="bi bi-plus-lg me-1"></i> Nuova Chiave
+                </button>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtri e Tabella -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <!-- Filtri -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="search-input" class="form-label visually-hidden">Cerca</label>
+                            <input type="text" id="search-input" class="form-control" 
+                                   placeholder="Cerca per chiave o categoria...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status-filter" class="form-label visually-hidden">Stato</label>
+                            <select id="status-filter" class="form-select">
+                                <option value="">Tutti gli stati</option>
+                                <option value="available">Disponibile</option>
+                                <option value="in_delivery">In consegna</option>
+                                <option value="dismised">Dismessa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-outline-secondary" id="btn-refresh" title="Aggiorna">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabulator -->
+                    <div id="keys-table"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuova Chiave -->
+<div class="modal fade" id="modalNewKey" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form-new-key">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>Nuova Chiave
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?= csrf_field() ?>
+                    
+                    <div class="mb-3">
+                        <label for="new-category" class="form-label form-label-required">Categoria</label>
+                        <select name="category_id" id="new-category" class="form-select" required>
+                            <option value="">Seleziona categoria...</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new-identifier" class="form-label form-label-required">Identificativo</label>
+                        <input type="text" name="identifier" id="new-identifier" class="form-control" 
+                               placeholder="Es: Rossi Mario, Porta ingresso, ..." required maxlength="100">
+                        <div class="form-text">Inserisci il proprietario o un identificativo della chiave</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Consegna -->
+<div class="modal fade" id="modalCheckout" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form-checkout">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-box-arrow-up me-2"></i>Consegna Chiave
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="key_id" id="checkout-key-id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Chiave</label>
+                        <input type="text" class="form-control" id="checkout-key-name" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="checkout-recipient" class="form-label form-label-required">Ricevente</label>
+                        <input type="text" name="recipient_name" id="checkout-recipient" class="form-control" 
+                               placeholder="Nome e cognome o ditta" required maxlength="100">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="checkout-notes" class="form-label">Note (opzionale)</label>
+                        <textarea name="notes" id="checkout-notes" class="form-control" rows="2" 
+                                  placeholder="Note aggiuntive..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-box-arrow-up me-1"></i>Consegna
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rientro -->
+<div class="modal fade" id="modalCheckin" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form-checkin">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-box-arrow-in-down me-2"></i>Rientro Chiave
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="key_id" id="checkin-key-id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Chiave</label>
+                        <input type="text" class="form-control" id="checkin-key-name" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="checkin-notes" class="form-label">Note (opzionale)</label>
+                        <textarea name="notes" id="checkin-notes" class="form-control" rows="2" 
+                                  placeholder="Stato chiave, osservazioni..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-box-arrow-in-down me-1"></i>Registra Rientro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?php 
+// Imposta ruolo utente per JS
+echo "<script>window.USER_ROLE = '" . (current_role() ?? '') . "';</script>";
+include __DIR__ . '/../includes/layout/footer.php'; 
+?>

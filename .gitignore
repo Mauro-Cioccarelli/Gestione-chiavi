@@ -1,0 +1,48 @@
+# Gestione Chiavi - Git Ignore
+
+# File installati
+.installed
+
+# Configurazione locale
+includes/config.local.php
+config.php
+
+# Log
+logs/
+*.log
+
+# Ambiente
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Backup
+*.bak
+*.old
+*.backup
+
+# Database dump
+*.sql
+!migrations/*.sql
+
+# Upload
+uploads/
+tmp/
+
+# Composer (se usato)
+vendor/
+composer.lock
+
+# Node (se usato)
+node_modules/
+package-lock.json

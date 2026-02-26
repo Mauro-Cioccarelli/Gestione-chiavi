@@ -1,0 +1,188 @@
+/*
+
+Author: Craig Erskine
+
+Description: Dynamic Menu System - Horizontal/Vertical
+
+*/
+
+
+
+#menu_cont {
+    /* Firefox */
+    display:-moz-box;
+    -moz-box-pack:center;
+    -moz-box-align:center;
+
+    /* Safari and Chrome */
+    display:-webkit-box;
+    -webkit-box-pack:center;
+    -webkit-box-align:center;
+
+    /* W3C */
+    display:box;
+    box-pack:center;
+    box-align:center;
+	
+	background-color: #F9F6F2;
+	width: 890px;
+	margin-top: 20px;
+	margin-right: auto;
+	margin-bottom: 20px;
+	margin-left: auto;
+	border: 1px solid #333;
+	padding: 10px;
+}
+
+
+
+#menu_in {
+	width:auto;
+	margin: 0 auto; 
+}
+
+
+
+.separatore {
+	-webkit-text-size-adjust: 100%;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-size: 22px;
+	font-weight: bolder;
+	color: #F00;
+	line-height: 22px;
+	border-right-width: thin;
+	border-right-style: solid;
+	border-right-color: #C00;
+	height: 30px;
+	width: 0px;
+	border-left-width: thin;
+	border-left-style: solid;
+	border-left-color: #C00;
+}
+
+
+
+
+
+ul#navmenu-h { margin: 0; padding: 0; list-style: none; position: relative; }
+
+
+
+ul#navmenu-h ul {
+	width: 220px; /* Sub Menu Width */
+	margin: 0;
+	list-style: none;
+	display: none;
+	position: absolute;
+	top: 100%;
+	left: 0px;
+	z-index: 10;
+}
+
+
+
+ul#navmenu-h ul ul,ul#navmenu-h ul ul ul { top: 0; left: 100%; }
+
+
+
+ul#navmenu-h li { float: left; display: inline; position: relative; }
+
+ul#navmenu-h ul li {
+	width: 100%;
+	display: block;
+	left: -40px;
+	border: 1px solid #999;
+}
+
+
+
+/* Root Menu */
+
+ul#navmenu-h a {
+	-webkit-text-size-adjust: 100%;
+	padding-left:6px;
+	padding-right:6px;
+	line-height:30px;
+	float: left;
+	display: block;
+	color: #006;
+	text-decoration: none;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+	background-color: #F9F6F2;
+
+}
+
+
+
+/* Root Menu Hover Persistence */
+
+ul#navmenu-h a:hover, ul#navmenu-h li:hover a,ul#navmenu-h li.iehover a {
+	background-color: #FD0;
+	color: #C00;
+}
+
+
+
+/* 2nd Menu */
+
+ul#navmenu-h li:hover li a,ul#navmenu-h li.iehover li a {
+ float: none;
+ background:  #F9F6F2;
+ color: #006;
+}
+
+
+
+/* 2nd Menu Hover Persistence */
+
+ul#navmenu-h li:hover li a:hover,ul#navmenu-h li:hover li:hover a,ul#navmenu-h li.iehover li a:hover,ul#navmenu-h li.iehover li.iehover a {
+	color: #006;
+	background-color: #FD0;
+}
+
+
+
+/* 3rd Menu */
+
+ul#navmenu-h li:hover li:hover li a,ul#navmenu-h li.iehover li.iehover li a {
+ background: #AAA;
+ color: #006;
+}
+
+
+
+/* 3rd Menu Hover Persistence */
+
+ul#navmenu-h li:hover li:hover li a:hover,ul#navmenu-h li:hover li:hover li:hover a,ul#navmenu-h li.iehover li.iehover li a:hover,ul#navmenu-h li.iehover li.iehover li.iehover a {
+ background: #AAA;
+ color: #006;
+}
+
+
+
+/* 4th Menu */
+
+ul#navmenu-h li:hover li:hover li:hover li a,ul#navmenu-h li.iehover li.iehover li.iehover li a {
+ background: #AAA;
+ color: #006;
+  }
+
+
+
+/* 4th Menu Hover */
+
+ul#navmenu-h li:hover li:hover li:hover li a:hover,ul#navmenu-h li.iehover li.iehover li.iehover li a:hover {
+ background: #AAA;
+  color: #006;
+
+}
+
+
+
+/* Hover Function - Do Not Move */
+
+ul#navmenu-h li:hover ul ul,ul#navmenu-h li:hover ul ul ul,ul#navmenu-h li.iehover ul ul,ul#navmenu-h li.iehover ul ul ul { display: none; }
+
+ul#navmenu-h li:hover ul,ul#navmenu-h ul li:hover ul,ul#navmenu-h ul ul li:hover ul,ul#navmenu-h li.iehover ul,ul#navmenu-h ul li.iehover ul,ul#navmenu-h ul ul li.iehover ul { display: block; }
