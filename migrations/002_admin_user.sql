@@ -10,7 +10,7 @@ VALUES (
     1,
     'admin',
     'admin@localhost',
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    '$2y$12$jQeMN/qzFkFZ4g.UB9RwbOoELpSlaq2X6ecSKwxan.75/AeLcsj7m',
     'god',
     1,
     NOW()

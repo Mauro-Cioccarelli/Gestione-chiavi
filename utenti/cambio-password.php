@@ -109,7 +109,7 @@ include __DIR__ . '/../includes/layout/header.php';
     </div>
 </div>
 
-<script src="<?= asset('js/auth.js') ?>"></script>
+<script src="/assets/js/auth.js"></script>
 <script>
 // Override redirect dopo cambio password forzato
 document.addEventListener('DOMContentLoaded', function() {

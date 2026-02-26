@@ -45,7 +45,7 @@ $actions = ['login_success', 'login_failed', 'logout', 'user_created', 'user_upd
 include __DIR__ . '/includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <div class="row mb-4">
         <div class="col-12">
             <h2>

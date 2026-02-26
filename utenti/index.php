@@ -9,12 +9,12 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_admin();
 
 $pageTitle = 'Gestione Utenti';
-$extraJs = [asset('js/utenti.js')];
+$extraJs = ['/assets/js/utenti.js'];
 
 include __DIR__ . '/../includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">

@@ -10,8 +10,8 @@ http_response_code(403);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>403 - Accesso Negato</title>
-    <link rel="stylesheet" href="/chiavi.test/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/chiavi.test/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
     <style>
         body {
             min-height: 100vh;
@@ -38,7 +38,7 @@ http_response_code(403);
         <div class="error-code">403</div>
         <h3>Accesso Negato</h3>
         <p class="lead">Non hai i permessi necessari per accedere a questa risorsa.</p>
-        <a href="/chiavi.test/login.php" class="btn btn-light btn-lg mt-3">
+        <a href="/login.php" class="btn btn-light btn-lg mt-3">
             <i class="bi bi-house me-2"></i>Torna al Login
         </a>
     </div>

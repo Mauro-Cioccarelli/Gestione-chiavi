@@ -14,19 +14,19 @@ $pageTitle = 'Dashboard';
 $db = db();
 
 // Totale chiavi
-$stmt = $db->query("SELECT COUNT(*) as total FROM keys WHERE deleted_at IS NULL");
+$stmt = $db->query("SELECT COUNT(*) as total FROM `keys` WHERE deleted_at IS NULL");
 $totalKeys = $stmt->fetch()['total'];
 
 // Chiavi disponibili
-$stmt = $db->query("SELECT COUNT(*) as total FROM keys WHERE status = '" . KEY_AVAILABLE . "' AND deleted_at IS NULL");
+$stmt = $db->query("SELECT COUNT(*) as total FROM `keys` WHERE status = '" . KEY_AVAILABLE . "' AND deleted_at IS NULL");
 $availableKeys = $stmt->fetch()['total'];
 
 // Chiavi in consegna
-$stmt = $db->query("SELECT COUNT(*) as total FROM keys WHERE status = '" . KEY_IN_DELIVERY . "' AND deleted_at IS NULL");
+$stmt = $db->query("SELECT COUNT(*) as total FROM `keys` WHERE status = '" . KEY_IN_DELIVERY . "' AND deleted_at IS NULL");
 $inDeliveryKeys = $stmt->fetch()['total'];
 
 // Chiavi dismesse
-$stmt = $db->query("SELECT COUNT(*) as total FROM keys WHERE status = '" . KEY_DISMISED . "' AND deleted_at IS NULL");
+$stmt = $db->query("SELECT COUNT(*) as total FROM `keys` WHERE status = '" . KEY_DISMISED . "' AND deleted_at IS NULL");
 $dismisedKeys = $stmt->fetch()['total'];
 
 // Totale utenti
@@ -35,15 +35,16 @@ $totalUsers = $stmt->fetch()['total'];
 
 // Ultimi movimenti
 $stmt = $db->query("
-    SELECT 
+    SELECT
         km.id,
+        km.key_id,
         km.action,
         km.recipient_name,
         km.created_at,
         k.identifier as key_identifier,
         u.username
     FROM key_movements km
-    LEFT JOIN keys k ON km.key_id = k.id
+    LEFT JOIN `keys` k ON km.key_id = k.id
     LEFT JOIN users u ON km.user_id = u.id
     ORDER BY km.created_at DESC
     LIMIT 10
@@ -62,9 +63,9 @@ $actionLabels = [
 include __DIR__ . '/includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <!-- Stats Row -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-3 mb-3">
             <div class="card stat-card stat-card-primary card-hover h-100">
                 <div class="card-body">
@@ -147,7 +148,7 @@ include __DIR__ . '/includes/layout/header.php';
     <!-- Main Content Row -->
     <div class="row">
         <!-- Recent Movements -->
-        <div class="col-lg-8 mb-4">
+        <div class="col-lg-8 mb-3">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-clock-history me-2"></i>Ultimi Movimenti</span>
@@ -207,7 +208,7 @@ include __DIR__ . '/includes/layout/header.php';
         </div>
         
         <!-- Quick Actions -->
-        <div class="col-lg-4 mb-4">
+        <div class="col-lg-4 mb-3">
             <div class="card h-100">
                 <div class="card-header">
                     <i class="bi bi-lightning-charge me-2"></i>Azioni Rapide

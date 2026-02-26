@@ -10,14 +10,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inizializza Tabulator
     const table = new Tabulator(tableElement, {
         ajaxURL: window.APP_URL + "/ajax/chiavi/list.php",
-        ajaxParams: {
-            csrf_token: window.CSRF_TOKEN || ''
+        ajaxConfig: {
+            method: "GET",
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': window.CSRF_TOKEN || ''
+            },
+            credentials: 'same-origin'
         },
-        ajaxFiltering: true,
-        ajaxSorting: true,
+        ajaxParams: {},
+        ajaxResponse: function(url, params, response) {
+            // Estrai i dati dalla risposta
+            return response.data || [];
+        },
         pagination: "remote",
         paginationSize: 20,
         paginationSizeSelector: [10, 20, 50, 100],
+        paginationDataSent: {
+            page: "page",
+            size: "size",
+            sort_field: "sort",
+            sort_dir: "dir"
+        },
+        paginationDataReceived: {
+            last_page: "last_page"
+        },
+        ajaxFiltering: true,
+        ajaxSorting: true,
         columns: [
             {
                 title: "ID",

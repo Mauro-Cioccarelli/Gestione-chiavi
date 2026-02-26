@@ -146,22 +146,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->exec("TRUNCATE TABLE _key_id_mapping");
             
             // 3a. Identifica chiavi duplicate e determina quale mantenere
-            // Priorità: ATTIVA > DISMESSA, poi ID più alto (più recente)
+            // Priorità: NON DISMESSA (k_canc != 'c') > DISMESSA, poi ID più alto
             $stmt = $db->query("
                 INSERT INTO _key_id_mapping (old_id, new_id, is_deduplicated, kept_id)
-                SELECT 
+                SELECT
                     k.k_id AS old_id,
-                    CASE 
+                    CASE
                         -- Questa è la chiave da mantenere?
                         WHEN k.k_id = (
-                            SELECT k2.k_id 
+                            SELECT k2.k_id
                             FROM keys_k k2
                             WHERE k2.k_cat = k.k_cat AND k2.k_name = k.k_name
-                            ORDER BY 
-                                -- Priorità: attive prima
-                                CASE 
-                                    WHEN k2.k_out = 0 OR k2.k_out IS NULL OR k2.k_out = '0000-00-00 00:00:00' THEN 0 
-                                    ELSE 1 
+                            ORDER BY
+                                -- Priorità: non dismesse prima (k_canc != 'c')
+                                CASE
+                                    WHEN k2.k_canc IS NULL OR k2.k_canc != 'c' THEN 0
+                                    ELSE 1
                                 END ASC,
                                 -- Poi ID più alto
                                 k2.k_id DESC
@@ -169,15 +169,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ) THEN k.k_id  -- Questa è la vincitrice, new_id = old_id
                         ELSE NULL  -- Questa sarà deduplicata, new_id sarà aggiornato dopo
                     END AS new_id,
-                    CASE 
+                    CASE
                         WHEN k.k_id = (
-                            SELECT k2.k_id 
+                            SELECT k2.k_id
                             FROM keys_k k2
                             WHERE k2.k_cat = k.k_cat AND k2.k_name = k.k_name
-                            ORDER BY 
-                                CASE 
-                                    WHEN k2.k_out = 0 OR k2.k_out IS NULL OR k2.k_out = '0000-00-00 00:00:00' THEN 0 
-                                    ELSE 1 
+                            ORDER BY
+                                CASE
+                                    WHEN k2.k_canc IS NULL OR k2.k_canc != 'c' THEN 0
+                                    ELSE 1
                                 END ASC,
                                 k2.k_id DESC
                             LIMIT 1
@@ -185,13 +185,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ELSE 1
                     END AS is_deduplicated,
                     (
-                        SELECT k2.k_id 
+                        SELECT k2.k_id
                         FROM keys_k k2
                         WHERE k2.k_cat = k.k_cat AND k2.k_name = k.k_name
-                        ORDER BY 
-                            CASE 
-                                WHEN k2.k_out = 0 OR k2.k_out IS NULL OR k2.k_out = '0000-00-00 00:00:00' THEN 0 
-                                ELSE 1 
+                        ORDER BY
+                            CASE
+                                WHEN k2.k_canc IS NULL OR k2.k_canc != 'c' THEN 0
+                                ELSE 1
                             END ASC,
                             k2.k_id DESC
                         LIMIT 1
@@ -238,28 +238,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $db->query("
                 INSERT INTO `$mainDb`.key_movements (key_id, user_id, action, notes, created_at)
                 SELECT
-                    COALESCE(m.new_id, log.log_kid) AS key_id,  -- Usa nuovo ID se deduplicato
+                    m.new_id AS key_id,  -- Usa nuovo ID (solo movimenti con chiave valida)
                     (SELECT id FROM `$mainDb`.users WHERE username = log.log_user LIMIT 1),
                     'update',
                     CONCAT('[MIGRAZIONE] ', log.log_action),
                     log.log_date
                 FROM keys_log log
-                LEFT JOIN _key_id_mapping m ON log.log_kid = m.old_id
+                INNER JOIN _key_id_mapping m ON log.log_kid = m.old_id
+                WHERE m.new_id IS NOT NULL  -- Solo movimenti per chiavi che esistono nel nuovo DB
             ");
 
             // 5. Movimenti per chiavi in consegna - con mapping ID deduplicati
             $stmt = $db->query("
                 INSERT INTO `$mainDb`.key_movements (key_id, user_id, action, recipient_name, notes, created_at)
                 SELECT
-                    COALESCE(m.new_id, k.k_id) AS key_id,  -- Usa nuovo ID se deduplicato
+                    m.new_id AS key_id,  -- Usa nuovo ID (solo movimenti con chiave valida)
                     (SELECT id FROM `$mainDb`.users WHERE username = k.k_cons_from LIMIT 1),
                     'checkout',
                     k.k_cons_to,
                     'Movimento migrato da legacy',
                     k.k_out
                 FROM keys_k k
-                LEFT JOIN _key_id_mapping m ON k.k_id = m.old_id
-                WHERE k.k_out IS NOT NULL AND k.k_out != '0000-00-00 00:00:00' AND k.k_out != 0
+                INNER JOIN _key_id_mapping m ON k.k_id = m.old_id
+                WHERE m.new_id IS NOT NULL  -- Solo chiavi che esistono nel nuovo DB
+                  AND k.k_out IS NOT NULL AND k.k_out != '0000-00-00 00:00:00' AND k.k_out != 0
             ");
 
             // 6. Log audit per deduplicazione
@@ -313,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include __DIR__ . '/../includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <div class="row mb-4">
         <div class="col-12">
             <h2><i class="bi bi-database-gear me-2"></i>Gestione Migrazioni</h2>

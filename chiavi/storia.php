@@ -57,7 +57,7 @@ $actionLabels = [
 include __DIR__ . '/../includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
@@ -286,7 +286,7 @@ include __DIR__ . '/../includes/layout/header.php';
     </div>
 </div>
 
-<script src="<?= asset('js/chiavi.js') ?>"></script>
+<script src="/assets/js/chiavi.js"></script>
 <script>
 // Override funzioni per questa pagina
 function openCheckout(keyId, keyName) {

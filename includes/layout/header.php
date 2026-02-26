@@ -8,7 +8,6 @@
  * Variabili opzionali:
  *   - $hideSidebar: Nascondi sidebar (default: false)
  *   - $hideHeader: Nascondi header superiore (default: false)
- *   - $extraCss: Array di CSS aggiuntivi da includere
  */
 
 // Prevenire accesso diretto
@@ -20,7 +19,6 @@ if (!defined('APP_ROOT')) {
 $pageTitle = $pageTitle ?? 'Dashboard';
 $hideSidebar = $hideSidebar ?? false;
 $hideHeader = $hideHeader ?? false;
-$extraCss = $extraCss ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -32,118 +30,90 @@ $extraCss = $extraCss ?? [];
     <title><?= htmlspecialchars($pageTitle) ?> - <?= htmlspecialchars(APP_NAME) ?></title>
     
     <!-- Favicon -->
-    <link rel="icon" href="<?= asset('images/favicon.ico') ?>" type="image/x-icon">
+    <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="<?= asset('bootstrap-5.3.8-dist/css/bootstrap.min.css') ?>">
-    
+    <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css?v=<?= time() ?>">
+
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="<?= asset('bootstrap-icons-1.13.1/font/bootstrap-icons.min.css') ?>">
-    
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/bootstrap-icons.min.css?v=<?= time() ?>">
+
     <!-- Tabulator CSS -->
-    <link rel="stylesheet" href="<?= asset('tabulator-master/dist/css/tabulator.min.css') ?>">
-    <link rel="stylesheet" href="<?= asset('tabulator-master/dist/css/tabulator_bootstrap5.min.css') ?>">
+    <link rel="stylesheet" href="/assets/tabulator-master/dist/css/tabulator.min.css">
+    <link rel="stylesheet" href="/assets/tabulator-master/dist/css/tabulator_bootstrap5.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= asset('css/main.css') ?>">
-    
-    <!-- CSS aggiuntivi -->
-    <?php foreach ($extraCss as $css): ?>
-        <link rel="stylesheet" href="<?= htmlspecialchars($css) ?>">
-    <?php endforeach; ?>
-    
+    <link rel="stylesheet" href="/assets/css/main.css?v=<?= time() ?>">
+
     <style>
-        :root {
-            --sidebar-width: 260px;
-            --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
-            --header-height: 60px;
-        }
-        
         body {
             min-height: 100vh;
             background: #f5f6fa;
+            overflow-x: hidden;
         }
-        
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
-            width: var(--sidebar-width);
-            background: var(--sidebar-bg);
+            width: 20%;
+            min-width: 200px;
+            max-width: 250px;
+            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
             overflow-y: auto;
             z-index: 1000;
-            transition: transform 0.3s ease;
         }
-        
         .sidebar-brand {
-            padding: 1.25rem;
+            padding: 0.75rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
-        
         .sidebar-brand i {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: #3498db;
         }
-        
         .sidebar-brand h6 {
             color: #fff;
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
         }
-        
         .sidebar .nav-link {
             color: rgba(255,255,255,0.7);
-            padding: 0.875rem 1.25rem;
+            padding: 0.625rem 1rem;
             margin: 0.125rem 0.5rem;
             border-radius: 0.375rem;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            font-size: 0.85rem;
         }
-        
-        .sidebar .nav-link:hover {
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
             color: #fff;
             background: rgba(255,255,255,0.1);
         }
-        
-        .sidebar .nav-link.active {
-            color: #fff;
-            background: rgba(52, 152, 219, 0.2);
-        }
-        
         .sidebar .nav-link i {
             margin-right: 0.625rem;
             width: 1.25rem;
             text-align: center;
         }
-        
         .sidebar-user {
             padding: 1rem;
             margin: 1rem 0.5rem;
             background: rgba(255,255,255,0.05);
             border-radius: 0.375rem;
         }
-        
         .sidebar-user .username {
             color: #fff;
             font-weight: 600;
-            margin-bottom: 0.25rem;
         }
-        
         .sidebar-user .role {
             color: rgba(255,255,255,0.6);
             font-size: 0.75rem;
         }
-        
         .main-wrapper {
-            margin-left: var(--sidebar-width);
+            margin-left: 20%;
             min-height: 100vh;
-            transition: margin-left 0.3s ease;
         }
-        
         .top-header {
-            height: var(--header-height);
+            height: 50px;
             background: #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             display: flex;
@@ -154,57 +124,25 @@ $extraCss = $extraCss ?? [];
             top: 0;
             z-index: 999;
         }
-        
         .main-content {
-            padding: 1.5rem;
+            padding: 0.75rem;
         }
-        
         .card {
             border: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border-radius: 0.5rem;
         }
-        
-        .card-header {
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            font-weight: 600;
-        }
-        
-        /* Mobile responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-wrapper {
-                margin-left: 0;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; }
         }
-        
-        /* Flash messages */
         .flash-message {
             position: fixed;
             top: 1rem;
             right: 1rem;
             z-index: 1050;
             min-width: 300px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
         }
     </style>
 </head>

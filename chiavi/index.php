@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_login();
 
 $pageTitle = 'Inventario Chiavi';
-$extraJs = [asset('js/chiavi.js')];
+$extraJs = ['/assets/js/chiavi.js'];
 
 // Ottieni categorie per select
 $db = db();
@@ -18,9 +18,9 @@ $categories = $db->query("SELECT id, name FROM key_categories WHERE deleted_at I
 include __DIR__ . '/../includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <!-- Header -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="mb-0">

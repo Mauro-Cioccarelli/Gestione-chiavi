@@ -9,16 +9,12 @@
  */
 
 define('APP_ROOT', true);
-require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/db.php';
 
 // Verifica se già installato
 if (is_installed()) {
     die('L\'applicazione è già installata. Per reinstallare, eliminare il file .installed nella root.');
-}
-
-// Verifica configurazione database
-if (!is_db_configured()) {
-    die('Configurazione database non completata. Modifica includes/config.php con le credenziali corrette.');
 }
 
 $errors = [];
@@ -107,10 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Installazione - <?= htmlspecialchars(APP_NAME) ?></title>
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="<?= asset('bootstrap-5.3.8-dist/css/bootstrap.min.css') ?>">
-    
+    <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="<?= asset('bootstrap-icons-1.13.1/font/bootstrap-icons.min.css') ?>">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
     
     <style>
         body {
@@ -259,6 +255,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     
     <!-- Bootstrap JS -->
-    <script src="<?= asset('bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

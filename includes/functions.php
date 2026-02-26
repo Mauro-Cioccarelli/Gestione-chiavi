@@ -111,13 +111,6 @@ function url(string $path): string {
 }
 
 /**
- * Genera URL asset
- */
-function asset(string $path): string {
-    return ASSETS_URL . '/' . ltrim($path, '/');
-}
-
-/**
  * Ottieni IP client (considera proxy)
  */
 function get_client_ip(): string {
@@ -148,23 +141,6 @@ function get_user_agent(): string {
 function is_https(): bool {
     return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
            (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-}
-
-/**
- * Debug helper (solo sviluppo)
- */
-function dd(...$vars): void {
-    if (!defined('DEBUG') || !DEBUG) {
-        return;
-    }
-    
-    echo '<pre style="background:#f4f4f4;padding:10px;border-radius:5px;">';
-    foreach ($vars as $var) {
-        var_dump($var);
-        echo '<hr>';
-    }
-    echo '</pre>';
-    exit;
 }
 
 /**

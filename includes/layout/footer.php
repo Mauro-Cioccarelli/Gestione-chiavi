@@ -19,31 +19,13 @@ if (!defined('APP_ROOT')) {
 <!-- End Main Wrapper -->
 
 <!-- Bootstrap JS -->
-<script src="<?= asset('bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') ?>"></script>
+<script src="/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js?v=<?= time() ?>"></script>
 
 <!-- Tabulator JS -->
-<script src="<?= asset('tabulator-master/dist/js/tabulator.min.js') ?>"></script>
-
-<!-- Tabulator Italian locale -->
-<script>
-Tabulator.registerModule("localize", "it", {
-    "pagination": {
-        "first": "Prima",
-        "prev": "Precedente",
-        "next": "Successiva",
-        "last": "Ultima",
-        "counter": {
-            "showing": "Mostra",
-            "of": "di",
-            "rows": "righe",
-            "all": "Tutte"
-        }
-    }
-});
-</script>
+<script src="/assets/tabulator-master/dist/js/tabulator.min.js?v=<?= time() ?>"></script>
 
 <!-- Custom JS -->
-<script src="<?= asset('js/main.js') ?>"></script>
+<script src="/assets/js/main.js?v=<?= time() ?>"></script>
 
 <!-- CSRF token per AJAX -->
 <script>

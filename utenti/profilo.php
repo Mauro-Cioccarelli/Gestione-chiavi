@@ -36,7 +36,7 @@ $recentLogins = $stmt->fetchAll();
 include __DIR__ . '/../includes/layout/header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <div class="row mb-4">
         <div class="col-12">
             <h2>
@@ -206,6 +206,6 @@ include __DIR__ . '/../includes/layout/header.php';
     </div>
 </div>
 
-<script src="<?= asset('js/auth.js') ?>"></script>
+<script src="/assets/js/auth.js"></script>
 
 <?php include __DIR__ . '/../includes/layout/footer.php'; ?>

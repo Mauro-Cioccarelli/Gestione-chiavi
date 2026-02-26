@@ -10,8 +10,8 @@ http_response_code(404);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Pagina non trovata</title>
-    <link rel="stylesheet" href="/chiavi.test/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/chiavi.test/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
     <style>
         body {
             min-height: 100vh;
@@ -38,7 +38,7 @@ http_response_code(404);
         <div class="error-code">404</div>
         <h3>Pagina non trovata</h3>
         <p class="lead">La pagina che stai cercando non esiste o è stata spostata.</p>
-        <a href="/chiavi.test/login.php" class="btn btn-light btn-lg mt-3">
+        <a href="/login.php" class="btn btn-light btn-lg mt-3">
             <i class="bi bi-house me-2"></i>Torna al Login
         </a>
     </div>

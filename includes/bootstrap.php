@@ -1,10 +1,10 @@
 <?php
 /**
  * Bootstrap dell'applicazione
- * 
+ *
  * Questo file inizializza l'applicazione e fornisce funzioni di protezione
  * per le pagine. Da includere all'inizio di ogni script PHP.
- * 
+ *
  * Uso:
  *   define('APP_ROOT', true);
  *   require_once __DIR__ . '/includes/bootstrap.php';
@@ -15,6 +15,11 @@ if (!defined('APP_ROOT')) {
     define('APP_ROOT', true);
 }
 
+// FORZA VISUALIZZAZIONE ERRORI (SVILUPPO)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Carica configurazione
 require_once __DIR__ . '/config.php';
 
@@ -22,6 +27,9 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/validator.php';
+require_once __DIR__ . '/functions.php';
 
 /**
  * Verifica che l'utente sia loggato

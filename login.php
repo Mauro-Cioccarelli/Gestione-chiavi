@@ -49,13 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Redirect per cambio password forzato
             if ($result['force_password_change']) {
+                session_write_close();
                 header('Location: ' . APP_URL . '/utenti/cambio-password.php?force=1');
                 exit;
             }
-            
+
             // Redirect a dashboard o pagina originale
             $redirect = $_SESSION['redirect_after_login'] ?? APP_URL . '/dashboard.php';
             unset($_SESSION['redirect_after_login']);
+            session_write_close();
             header('Location: ' . $redirect);
             exit;
         } else {
@@ -77,10 +79,10 @@ $rememberedUsername = $_COOKIE['remember_username'] ?? '';
     <title>Login - <?= htmlspecialchars(APP_NAME) ?></title>
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="<?= asset('bootstrap-5.3.8-dist/css/bootstrap.min.css') ?>">
-    
+    <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="<?= asset('bootstrap-icons-1.13.1/font/bootstrap-icons.min.css') ?>">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
     
     <style>
         body {
@@ -217,7 +219,7 @@ $rememberedUsername = $_COOKIE['remember_username'] ?? '';
     </div>
     
     <!-- Bootstrap JS -->
-    <script src="<?= asset('bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
         // Auto-focus username se vuoto
