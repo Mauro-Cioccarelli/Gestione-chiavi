@@ -39,7 +39,7 @@ $recipientName = sanitize_string($input['recipient_name']);
 $notes = isset($input['notes']) ? sanitize_string($input['notes']) : '';
 
 // Verifica chiave esistente e disponibile
-$stmt = $db->prepare("SELECT status, identifier FROM keys WHERE id = ? AND deleted_at IS NULL");
+$stmt = $db->prepare("SELECT status, identifier FROM `keys` WHERE id = ? AND deleted_at IS NULL");
 $stmt->execute([$keyId]);
 $key = $stmt->fetch();
 
@@ -59,7 +59,7 @@ try {
     $db->beginTransaction();
     
     // Aggiorna stato chiave
-    $stmt = $db->prepare("UPDATE keys SET status = 'in_delivery', updated_at = NOW() WHERE id = ?");
+    $stmt = $db->prepare("UPDATE `keys` SET status = 'in_delivery', updated_at = NOW() WHERE id = ?");
     $stmt->execute([$keyId]);
     
     // Registra movimento

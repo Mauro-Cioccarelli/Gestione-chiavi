@@ -29,7 +29,7 @@ $stmt = $db->prepare("
         k.status,
         kc.name as category_name,
         k.created_at
-    FROM keys k
+    FROM `keys` k
     LEFT JOIN key_categories kc ON k.category_id = kc.id
     WHERE k.id = ? AND k.deleted_at IS NULL
 ");

@@ -24,6 +24,9 @@ if (!defined('APP_ROOT')) {
 <!-- Tabulator JS -->
 <script src="/assets/tabulator-master/dist/js/tabulator.min.js?v=<?= time() ?>"></script>
 
+<!-- Tom Select JS -->
+<script src="/assets/tom-select/tom-select.complete.js"></script>
+
 <!-- Custom JS -->
 <script src="/assets/js/main.js?v=<?= time() ?>"></script>
 

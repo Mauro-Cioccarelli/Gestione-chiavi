@@ -36,7 +36,7 @@ $keyId = (int)$input['key_id'];
 $notes = isset($input['notes']) ? sanitize_string($input['notes']) : '';
 
 // Verifica chiave esistente e in consegna
-$stmt = $db->prepare("SELECT status, identifier FROM keys WHERE id = ? AND deleted_at IS NULL");
+$stmt = $db->prepare("SELECT status, identifier FROM `keys` WHERE id = ? AND deleted_at IS NULL");
 $stmt->execute([$keyId]);
 $key = $stmt->fetch();
 
@@ -56,7 +56,7 @@ try {
     $db->beginTransaction();
     
     // Aggiorna stato chiave
-    $stmt = $db->prepare("UPDATE keys SET status = 'available', updated_at = NOW() WHERE id = ?");
+    $stmt = $db->prepare("UPDATE `keys` SET status = 'available', updated_at = NOW() WHERE id = ?");
     $stmt->execute([$keyId]);
     
     // Registra movimento

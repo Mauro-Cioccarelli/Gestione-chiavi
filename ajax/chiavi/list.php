@@ -28,7 +28,7 @@ if (!in_array($sortField, $allowedSort)) {
 }
 
 // Filters
-$where = ['k.deleted_at IS NULL'];
+$where = [];
 $params = [];
 
 // Extract Tabulator 6 remote filters
@@ -60,6 +60,9 @@ $status = $_GET['status'] ?? '';
 if ($status && in_array($status, ['available', 'in_delivery', 'dismised'])) {
     $where[] = "k.status = ?";
     $params[] = $status;
+} else {
+    // Hidden by default
+    $where[] = "k.deleted_at IS NULL";
 }
 
 // Category filter

@@ -31,14 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 field: "category_name",
                 minWidth: 150,
                 headerSort: true,
-                headerFilter: true
             },
             {
                 title: "Chiave",
                 field: "identifier",
                 minWidth: 200,
                 headerSort: true,
-                headerFilter: true,
                 formatter: function (cell) {
                     const data = cell.getRow().getData();
                     return `<a href="${window.APP_URL}/chiavi/storia.php?id=${data.id}" class="text-decoration-none">
@@ -51,7 +49,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 field: "status",
                 width: 130,
                 headerSort: true,
-                headerFilter: "input",
                 formatter: function (cell) {
                     const status = cell.getValue();
                     const labels = {

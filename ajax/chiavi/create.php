@@ -52,7 +52,7 @@ try {
     // 1. Controllo se esiste già una chiave ATTIVA
     $stmt = $db->prepare("
         SELECT id, status
-        FROM keys
+        FROM `keys`
         WHERE category_id = ? AND identifier = ? AND deleted_at IS NULL
     ");
     $stmt->execute([$category_id, $identifier]);
@@ -72,7 +72,7 @@ try {
     // 2. Controllo se esiste una chiave DISMESSA
     $stmt = $db->prepare("
         SELECT id, status
-        FROM keys
+        FROM `keys`
         WHERE category_id = ? AND identifier = ? AND deleted_at IS NOT NULL
     ");
     $stmt->execute([$category_id, $identifier]);
@@ -93,7 +93,7 @@ try {
 
     // 3. Nessuna chiave esistente - creo nuova
     $stmt = $db->prepare("
-        INSERT INTO keys (category_id, identifier, status, created_at)
+        INSERT INTO `keys` (category_id, identifier, status, created_at)
         VALUES (?, ?, 'available', NOW())
     ");
     $stmt->execute([$category_id, $identifier]);

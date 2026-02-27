@@ -41,6 +41,9 @@ $hideHeader = $hideHeader ?? false;
     <!-- Tabulator CSS -->
     <link rel="stylesheet" href="/assets/tabulator-master/dist/css/tabulator.min.css">
     <link rel="stylesheet" href="/assets/tabulator-master/dist/css/tabulator_bootstrap5.min.css">
+
+    <!-- Tom Select CSS -->
+    <link rel="stylesheet" href="/assets/tom-select/tom-select.bootstrap5.min.css">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/assets/css/main.css?v=<?= time() ?>">

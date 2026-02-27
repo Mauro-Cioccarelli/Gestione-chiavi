@@ -35,7 +35,7 @@ $keyId = (int)$input['id'];
 // Verifica chiave esistente e dismessa
 $stmt = $db->prepare("
     SELECT id, identifier, status, deleted_at 
-    FROM keys 
+    FROM `keys` 
     WHERE id = ? AND deleted_at IS NOT NULL
 ");
 $stmt->execute([$keyId]);
@@ -52,7 +52,7 @@ try {
     
     // Ripristina chiave
     $stmt = $db->prepare("
-        UPDATE keys 
+        UPDATE `keys` 
         SET deleted_at = NULL, status = 'available', updated_at = NOW()
         WHERE id = ?
     ");
