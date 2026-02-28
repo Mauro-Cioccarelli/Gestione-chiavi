@@ -59,16 +59,8 @@ if (isset($input['email'])) {
         echo json_encode(['error' => 'Email non valida']);
         exit;
     }
-    
-    // Verifica email non duplicata
-    $stmt = $db->prepare("SELECT id FROM users WHERE email = ? AND id != ? AND deleted_at IS NULL");
-    $stmt->execute([$email, $userId]);
-    if ($stmt->fetch()) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Email già in uso']);
-        exit;
-    }
-    
+
+    // Email può essere duplicata - nessun controllo di univocità
     $updateData['email'] = $email;
 }
 

@@ -26,7 +26,7 @@ include __DIR__ . '/../includes/layout/header.php';
                 <h2 class="mb-0">
                     <i class="bi bi-key me-2"></i><?= htmlspecialchars($pageTitle) ?>
                 </h2>
-                <?php if (has_role(ROLE_ADMIN)): ?>
+                <?php if (has_role(ROLE_ADMIN) || has_role(ROLE_OPERATOR)): ?>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNewKey">
                     <i class="bi bi-plus-lg me-1"></i> Nuova Chiave
                 </button>

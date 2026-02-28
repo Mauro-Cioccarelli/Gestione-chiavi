@@ -379,20 +379,28 @@ function update_user(int $userId, array $data): array {
  */
 function delete_user(int $userId): array {
     $db = db();
-    
+
     try {
         // Non permettere eliminazione di se stessi
         if ($userId === current_user_id()) {
             return ['success' => false, 'error' => 'Non puoi eliminare il tuo account'];
         }
-        
+
+        // Ottieni username prima di eliminare
+        $stmt = $db->prepare("SELECT username FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        $deletedUsername = $user ? $user['username'] : 'Sconosciuto';
+
         $stmt = $db->prepare("UPDATE users SET deleted_at = NOW() WHERE id = ?");
         $stmt->execute([$userId]);
-        
-        audit_log('user_deleted', 'user', $userId);
-        
+
+        audit_log('user_deleted', 'user', $userId, [
+            'deleted_user' => $deletedUsername
+        ]);
+
         return ['success' => true];
-        
+
     } catch (PDOException $e) {
         error_log("Delete user error: " . $e->getMessage());
         return ['success' => false, 'error' => 'Errore di sistema'];

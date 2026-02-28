@@ -7,7 +7,8 @@ define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 require_login();
-if (!has_role(ROLE_ADMIN)) {
+// Admin, god e operatori possono creare categorie
+if (!has_role(ROLE_ADMIN) && !has_role(ROLE_OPERATOR)) {
     http_response_code(403);
     echo json_encode(['error' => 'Permessi insufficienti']);
     exit;
@@ -62,8 +63,14 @@ try {
         // Ripristino soft-deleted riga
         $stmtUpdate = $db->prepare("UPDATE key_categories SET deleted_at = NULL, description = ? WHERE id = ?");
         $stmtUpdate->execute([$description, $deletedRow['id']]);
-        
+
         $db->commit();
+        
+        audit_log('category_restored', 'category', $deletedRow['id'], [
+            'name' => $name,
+            'description' => $description
+        ]);
+        
         echo json_encode([
             'success' => true,
             'message' => 'Categoria riattivata con successo (esisteva precedentemente nel cestino)',
@@ -78,6 +85,12 @@ try {
     $newId = $db->lastInsertId();
 
     $db->commit();
+    
+    audit_log('category_created', 'category', $newId, [
+        'name' => $name,
+        'description' => $description
+    ]);
+    
     echo json_encode([
         'success' => true,
         'message' => 'Categoria creata con successo',

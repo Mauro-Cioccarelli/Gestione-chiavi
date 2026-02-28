@@ -2,22 +2,25 @@
  * Gestione Utenti - JavaScript
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const tableElement = document.getElementById('users-table');
-    
+
     if (!tableElement) return;
-    
+
+    // Determina se l'utente può modificare (admin/god) o solo visualizzare (operator)
+    const canEdit = window.USER_ROLE === 'admin' || window.USER_ROLE === 'god';
+
     // Inizializza Tabulator
     const table = new Tabulator(tableElement, {
         ajaxURL: window.APP_URL + "/ajax/utenti/list.php",
         ajaxParams: {
             csrf_token: window.CSRF_TOKEN || ''
         },
-        ajaxFiltering: true,
-        ajaxSorting: true,
-        pagination: "remote",
-        paginationSize: 20,
-        paginationSizeSelector: [10, 20, 50, 100],
+        layout: "fitColumns",
+        dataLoader: false,
+        pagination: false,
+        filterMode: "local",
+        sortMode: "local",
         columns: [
             {
                 title: "ID",
@@ -31,22 +34,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 field: "username",
                 minWidth: 150,
                 headerSort: true,
-                headerFilter: true
             },
             {
                 title: "Email",
                 field: "email",
                 minWidth: 200,
                 headerSort: true,
-                headerFilter: true
             },
             {
                 title: "Ruolo",
                 field: "role",
                 width: 120,
                 headerSort: true,
-                headerFilter: true,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const role = cell.getValue();
                     const labels = {
                         'operator': '<span class="badge bg-secondary">Operatore</span>',
@@ -55,10 +55,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                     return labels[role] || role;
                 },
-                editor: function(cell) {
+                editor: function (cell) {
                     // Solo god può modificare ruoli
                     if (!hasRole(['god'])) return false;
-                    
+
                     const editor = document.createElement("select");
                     editor.innerHTML = `
                         <option value="operator">Operatore</option>
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 field: "force_password_change",
                 width: 100,
                 hozAlign: "center",
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const value = cell.getValue();
                     if (value) {
                         return '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Forzato</span>';
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: "Ultimo Accesso",
                 field: "last_login",
                 width: 150,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const value = cell.getValue();
                     return value ? formatDateTime(value) : '-';
                 }
@@ -97,35 +97,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 width: 150,
                 headerSort: false,
                 hozAlign: "center",
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const data = cell.getRow().getData();
                     const currentUserId = window.CURRENT_USER_ID || 0;
-                    
+
                     let html = '';
-                    
+
                     // Modifica
-                    html += `<button class="btn btn-sm btn-outline-primary me-1" 
+                    html += `<button class="btn btn-sm btn-outline-primary me-1"
                                 onclick="editUser(${data.id})"
                                 title="Modifica">
                                 <i class="bi bi-pencil"></i>
                              </button>`;
-                    
+
                     // Elimina (non se stesso)
                     if (data.id != currentUserId) {
-                        html += `<button class="btn btn-sm btn-outline-danger" 
+                        html += `<button class="btn btn-sm btn-outline-danger"
                                     onclick="deleteUser(${data.id}, '${escapeHtml(data.username)}')"
                                     title="Elimina">
                                     <i class="bi bi-trash"></i>
                                  </button>`;
                     }
-                    
+
                     return html;
                 }
             }
         ],
         locale: true,
         langs: {
-            "it": {
+            "it-it": {
                 "pagination": {
                     "first": "Prima",
                     "prev": "Precedente",
@@ -135,59 +135,69 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         initialSort: [
-            {column: "username", dir: "asc"}
+            { column: "username", dir: "asc" }
         ]
     });
-    
+
     // Ricerca
     let searchTimeout;
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                table.setFilter("search", this.value);
-            }, 500);
+                const val = this.value;
+                if (val) {
+                    table.setFilter([
+                        [
+                            { field: "username", type: "like", value: val },
+                            { field: "email", type: "like", value: val }
+                        ]
+                    ]);
+                } else {
+                    table.clearFilter();
+                }
+            }, 300);
         });
     }
-    
+
     // Refresh
     const refreshBtn = document.getElementById('btn-refresh');
     if (refreshBtn) {
-        refreshBtn.addEventListener('click', function() {
+        refreshBtn.addEventListener('click', function () {
             table.replaceData();
         });
     }
-    
+
     // Form nuovo utente
     const formNewUser = document.getElementById('form-new-user');
     if (formNewUser) {
-        formNewUser.addEventListener('submit', function(e) {
+        formNewUser.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
-            
+
             showLoading();
-            
+
             fetchJSON(window.APP_URL + '/ajax/utenti/create.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(data => {
-                if (data.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('modalNewUser')).hide();
-                    table.replaceData();
-                    showAlert('success', data.message);
-                    formNewUser.reset();
-                } else {
-                    showAlert('danger', data.error);
-                }
-            })
-            .catch(err => {
-                showAlert('danger', 'Errore di comunicazione: ' + err.message);
-            })
-            .finally(() => {
-                hideLoading();
-            });
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('modalNewUser')).hide();
+                        table.replaceData();
+                        showAlert('success', data.message);
+                        formNewUser.reset();
+                    } else {
+                        showAlert('danger', data.error);
+                    }
+                })
+                .catch(err => {
+                    showAlert('danger', 'Errore di comunicazione: ' + err.message);
+                })
+                .finally(() => {
+                    hideLoading();
+                });
         });
     }
 });
@@ -202,22 +212,22 @@ document.addEventListener('DOMContentLoaded', function() {
 function editUser(userId) {
     // Carica dati utente e apri modal
     fetchJSON(window.APP_URL + '/ajax/utenti/get.php?id=' + userId)
-    .then(data => {
-        if (data.success) {
-            const user = data.user;
-            
-            document.getElementById('edit-user-id').value = user.id;
-            document.getElementById('edit-username').value = user.username;
-            document.getElementById('edit-email').value = user.email;
-            document.getElementById('edit-role').value = user.role;
-            document.getElementById('edit-force-pw').checked = user.force_password_change;
-            
-            new bootstrap.Modal(document.getElementById('modalEditUser')).show();
-        }
-    })
-    .catch(err => {
-        showAlert('danger', 'Errore nel caricamento dati: ' + err.message);
-    });
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+
+                document.getElementById('edit-user-id').value = user.id;
+                document.getElementById('edit-username').value = user.username;
+                document.getElementById('edit-email').value = user.email;
+                document.getElementById('edit-role').value = user.role;
+                document.getElementById('edit-force-pw').checked = user.force_password_change;
+
+                new bootstrap.Modal(document.getElementById('modalEditUser')).show();
+            }
+        })
+        .catch(err => {
+            showAlert('danger', 'Errore nel caricamento dati: ' + err.message);
+        });
 }
 
 /**
@@ -225,28 +235,29 @@ function editUser(userId) {
  */
 function saveUser() {
     const formData = new FormData(document.getElementById('form-edit-user'));
-    
+
     showLoading();
-    
+
     fetchJSON(window.APP_URL + '/ajax/utenti/update.php', {
         method: 'POST',
         body: formData
     })
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalEditUser')).hide();
-            document.getElementById('users-table').tabulator.replaceData();
-            showAlert('success', data.message);
-        } else {
-            showAlert('danger', data.error);
-        }
-    })
-    .catch(err => {
-        showAlert('danger', 'Errore di comunicazione: ' + err.message);
-    })
-    .finally(() => {
-        hideLoading();
-    });
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalEditUser')).hide();
+                const table = Tabulator.findTable('#users-table')[0];
+                if (table) table.replaceData();
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error);
+            }
+        })
+        .catch(err => {
+            showAlert('danger', 'Errore di comunicazione: ' + err.message);
+        })
+        .finally(() => {
+            hideLoading();
+        });
 }
 
 /**
@@ -256,31 +267,32 @@ function deleteUser(userId, username) {
     if (!confirm(`Sei sicuro di voler eliminare l'utente "${username}"?`)) {
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('csrf_token', window.CSRF_TOKEN || '');
     formData.append('id', userId);
-    
+
     showLoading();
-    
+
     fetchJSON(window.APP_URL + '/ajax/utenti/delete.php', {
         method: 'POST',
         body: formData
     })
-    .then(data => {
-        if (data.success) {
-            document.getElementById('users-table').tabulator.replaceData();
-            showAlert('success', data.message);
-        } else {
-            showAlert('danger', data.error);
-        }
-    })
-    .catch(err => {
-        showAlert('danger', 'Errore di comunicazione: ' + err.message);
-    })
-    .finally(() => {
-        hideLoading();
-    });
+        .then(data => {
+            if (data.success) {
+                const table = Tabulator.findTable('#users-table')[0];
+                if (table) table.replaceData();
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error);
+            }
+        })
+        .catch(err => {
+            showAlert('danger', 'Errore di comunicazione: ' + err.message);
+        })
+        .finally(() => {
+            hideLoading();
+        });
 }
 
 /**
@@ -293,7 +305,7 @@ function hasRole(roles) {
         'admin': 2,
         'god': 3
     };
-    
+
     const userLevel = roleHierarchy[userRole] || 0;
     return roles.some(role => userLevel >= (roleHierarchy[role] || 0));
 }

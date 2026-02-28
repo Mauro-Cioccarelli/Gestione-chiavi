@@ -30,6 +30,12 @@ require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/validator.php';
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/mailer.php';
+
+// Carica PHPMailer
+require_once BASE_PATH . '/assets/PHPMailer-7.0.2/src/Exception.php';
+require_once BASE_PATH . '/assets/PHPMailer-7.0.2/src/PHPMailer.php';
+require_once BASE_PATH . '/assets/PHPMailer-7.0.2/src/SMTP.php';
 
 /**
  * Verifica che l'utente sia loggato

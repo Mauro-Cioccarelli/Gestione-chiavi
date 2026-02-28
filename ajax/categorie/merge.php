@@ -7,7 +7,8 @@ define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 require_login();
-if (!has_role(ROLE_ADMIN)) {
+// Admin, god e operatori possono unire categorie
+if (!has_role(ROLE_ADMIN) && !has_role(ROLE_OPERATOR)) {
     http_response_code(403);
     echo json_encode(['error' => 'Permessi insufficienti']);
     exit;
@@ -90,6 +91,19 @@ try {
     $stmtDeleteSources->execute($sourceIds);
 
     $db->commit();
+
+    // Log audit per ogni categoria eliminata (merge)
+    foreach ($sourceIds as $sourceId) {
+        $stmtSourceName = $db->prepare("SELECT name FROM key_categories WHERE id = ?");
+        $stmtSourceName->execute([$sourceId]);
+        $sourceCat = $stmtSourceName->fetch();
+        if ($sourceCat) {
+            audit_log('category_merged', 'category', $sourceId, [
+                'merged_into' => $targetName,
+                'source_name' => $sourceCat['name']
+            ]);
+        }
+    }
 
     echo json_encode([
         'success' => true,

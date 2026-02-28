@@ -7,7 +7,8 @@ define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 require_login();
-if (!has_role(ROLE_ADMIN)) {
+// Admin, god e operatori possono modificare categorie
+if (!has_role(ROLE_ADMIN) && !has_role(ROLE_OPERATOR)) {
     http_response_code(403);
     echo json_encode(['error' => 'Permessi insufficienti']);
     exit;
@@ -44,6 +45,11 @@ $name = trim(sanitize_string($input['name']));
 $description = isset($input['description']) ? trim(sanitize_string($input['description'])) : null;
 
 try {
+    // Ottieni dati precedenti per il log
+    $stmtOld = $db->prepare("SELECT name, description FROM key_categories WHERE id = ?");
+    $stmtOld->execute([$id]);
+    $oldData = $stmtOld->fetch();
+    
     // Controllo che non esista un'altra con lo stesso nome
     $stmt = $db->prepare("SELECT id FROM key_categories WHERE LOWER(name) = LOWER(?) AND id != ? AND deleted_at IS NULL");
     $stmt->execute([$name, $id]);
@@ -53,8 +59,19 @@ try {
         exit;
     }
 
-    $stmtUpdate = $db->prepare("UPDATE key_categories SET name = ?, description = ? WHERE id = ?");
+    $stmtUpdate = $db->prepare("UPDATE key_categories SET name = ?, description = ?, updated_at = NOW() WHERE id = ?");
     $stmtUpdate->execute([$name, $description, $id]);
+
+    // Log audit
+    $changes = [];
+    if ($oldData['name'] !== $name) {
+        $changes['Nome'] = ['da' => $oldData['name'], 'a' => $name];
+    }
+    if ($oldData['description'] !== $description) {
+        $changes['Descrizione'] = ['da' => $oldData['description'] ?: 'N/A', 'a' => $description ?: 'N/A'];
+    }
+    
+    audit_log('category_updated', 'category', $id, $changes);
 
     echo json_encode([
         'success' => true,

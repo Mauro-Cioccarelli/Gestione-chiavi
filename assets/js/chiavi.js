@@ -10,12 +10,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Inizializza Tabulator con remote pagination
     const table = new Tabulator(tableElement, {
         ajaxURL: window.APP_URL + "/ajax/chiavi/list.php",
+        dataLoader: false,
         pagination: true,
         paginationMode: "remote",
         filterMode: "remote",
         sortMode: "remote",
         layout: "fitColumns",
-        paginationSize: 100,
+        paginationSize: 20,
         paginationSizeSelector: [10, 20, 50, 100],
         columns: [
             {
@@ -105,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="bi bi-clock-history"></i>
                              </button>`;
 
-                    if (hasRole(['admin', 'god'])) {
-                        html += `<button class="btn btn-sm btn-outline-secondary" 
+                    if (hasRole(['admin', 'god', 'operator'])) {
+                        html += `<button class="btn btn-sm btn-outline-secondary"
                                     onclick="editKey(${data.id})"
                                     title="Modifica">
                                     <i class="bi bi-pencil"></i>

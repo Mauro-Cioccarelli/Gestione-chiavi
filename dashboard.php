@@ -140,6 +140,12 @@ include __DIR__ . '/includes/layout/header.php';
                         Gestisci <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
+                <?php elseif (has_role(ROLE_OPERATOR)): ?>
+                <div class="card-footer bg-white border-0">
+                    <a href="<?= APP_URL ?>/utenti/index-operator.php" class="text-decoration-none small">
+                        Visualizza <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -152,7 +158,7 @@ include __DIR__ . '/includes/layout/header.php';
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-clock-history me-2"></i>Ultimi Movimenti</span>
-                    <a href="<?= APP_URL ?>/log.php" class="btn btn-sm btn-outline-primary" <?= !has_role(ROLE_ADMIN) ? 'disabled' : '' ?>>
+                    <a href="<?= APP_URL ?>/log.php" class="btn btn-sm btn-outline-primary" <?= !has_role(ROLE_ADMIN) && !has_role(ROLE_OPERATOR) ? 'disabled' : '' ?>>
                         Vedi tutti
                     </a>
                 </div>

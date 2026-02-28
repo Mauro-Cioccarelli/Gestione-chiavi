@@ -7,11 +7,9 @@ define('APP_ROOT', true);
 require_once __DIR__ . '/../includes/bootstrap.php';
 
 require_login();
-if (!has_role(ROLE_ADMIN)) {
-    $_SESSION['flash_error'] = 'Accesso negato. Permessi insufficienti.';
-    header('Location: index.php');
-    exit;
-}
+
+// Admin e god possono modificare, operatori hanno accesso completo comunque
+$canEdit = true;
 
 $pageTitle = 'Gestione Categorie';
 $extraJs = ['/assets/js/categorie.js'];
@@ -31,6 +29,7 @@ include __DIR__ . '/../includes/layout/header.php';
                 <h2 class="mb-0">
                     <i class="bi bi-folder-fill me-2"></i><?= htmlspecialchars($pageTitle) ?>
                 </h2>
+                <?php if ($canEdit): ?>
                 <div class="d-flex gap-2">
                     <button class="btn btn-warning opacity-50" id="btn-merge" disabled title="Seleziona almeno una riga per unire">
                         <i class="bi bi-intersect me-1"></i> Unisci
@@ -39,6 +38,7 @@ include __DIR__ . '/../includes/layout/header.php';
                         <i class="bi bi-plus-lg me-1"></i> Nuova Categoria
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -209,7 +209,10 @@ include __DIR__ . '/../includes/layout/header.php';
     </div>
 </div>
 
-<?php 
-echo "<script>window.USER_ROLE = '" . (current_role() ?? '') . "';</script>";
-include __DIR__ . '/../includes/layout/footer.php'; 
+<?php
+echo "<script>
+    window.USER_ROLE = '" . (current_role() ?? '') . "';
+    window.CAN_EDIT_CATEGORIES = " . ($canEdit ? 'true' : 'false') . ";
+</script>";
+include __DIR__ . '/../includes/layout/footer.php';
 ?>

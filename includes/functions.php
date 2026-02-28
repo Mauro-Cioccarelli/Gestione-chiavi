@@ -23,12 +23,13 @@ function redirect(string $url): void {
 
 /**
  * Formatta data per visualizzazione (italiano)
+ * Le date nel database sono già nel timezone configurato (TIMEZONE)
  */
 function format_date(?string $date, string $format = 'd/m/Y'): string {
     if (!$date || $date === '0000-00-00 00:00:00' || $date === '0000-00-00') {
         return '-';
     }
-    
+
     try {
         $dt = new DateTime($date);
         return $dt->format($format);
@@ -39,12 +40,13 @@ function format_date(?string $date, string $format = 'd/m/Y'): string {
 
 /**
  * Formatta datetime per visualizzazione (italiano)
+ * Le date nel database sono già nel timezone configurato (TIMEZONE)
  */
 function format_datetime(?string $datetime): string {
     if (!$datetime || $datetime === '0000-00-00 00:00:00') {
         return '-';
     }
-    
+
     try {
         $dt = new DateTime($datetime);
         return $dt->format('d/m/Y H:i');
@@ -55,10 +57,11 @@ function format_datetime(?string $datetime): string {
 
 /**
  * Formatta data relativa (es: "2 ore fa", "ieri")
+ * Le date nel database sono già nel timezone configurato (TIMEZONE)
  */
 function format_time_ago(?string $datetime): string {
     if (!$datetime) return '-';
-    
+
     try {
         $dt = new DateTime($datetime);
         $now = new DateTime();

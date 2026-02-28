@@ -28,15 +28,55 @@ if (!is_valid_email($email)) {
 $result = generate_password_reset_token($email);
 
 if ($result['success']) {
-    // In produzione: inviare email con link
-    // Per ora, ritorniamo il token per testing
-    
+    // Se è stato generato un token, invia email
+    if (isset($result['token']) && isset($result['username'])) {
+        $resetLink = APP_URL . '/utenti/recupera-password.php?token=' . $result['token'];
+        
+        $emailBody = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #0d6efd; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .content { background: #f8f9fa; padding: 30px; border: 1px solid #dee2e6; }
+                .button { display: inline-block; background: #0d6efd; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #6c757d; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Reset Password</h1>
+                </div>
+                <div class="content">
+                    <p>Ciao <strong>' . htmlspecialchars($result['username']) . '</strong>,</p>
+                    <p>Abbiamo ricevuto una richiesta per reimpostare la tua password.</p>
+                    <p>Clicca sul pulsante qui sotto per creare una nuova password:</p>
+                    <p style="text-align: center;">
+                        <a href="' . htmlspecialchars($resetLink) . '" class="button">Reimposta Password</a>
+                    </p>
+                    <p>Oppure copia e incolla questo link nel browser:</p>
+                    <p style="word-break: break-all; background: #e9ecef; padding: 10px; border-radius: 4px;">' . htmlspecialchars($resetLink) . '</p>
+                    <p><strong>Questo link scadrà tra 1 ora.</strong></p>
+                    <p>Se non hai richiesto il reset, ignora questa email.</p>
+                </div>
+                <div class="footer">
+                    <p>' . htmlspecialchars(APP_NAME) . ' - Non rispondere a questa email</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ';
+
+        send_email($email, 'Reset Password - ' . APP_NAME, $emailBody);
+    }
+
     echo json_encode([
         'success' => true,
-        'message' => $result['message'] ?? 'Se l\'email è registrata, riceverai le istruzioni per il reset',
-        // Solo sviluppo - rimuovere in produzione
-        'token' => $result['token'] ?? null,
-        'username' => $result['username'] ?? null
+        'message' => 'Se l\'email è registrata, riceverai le istruzioni per il reset'
     ]);
 } else {
     http_response_code(500);

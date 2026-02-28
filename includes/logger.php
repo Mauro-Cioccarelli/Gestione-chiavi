@@ -54,7 +54,7 @@ function audit_log(
 
 /**
  * Registra movimento chiave
- * 
+ *
  * @param int $keyId ID chiave
  * @param string $action Tipo di movimento (checkout, checkin, create, update, dismise)
  * @param int|null $recipientId ID utente ricevente (per checkout)
@@ -70,13 +70,13 @@ function log_key_movement(
     ?string $notes = null
 ): int {
     $db = db();
-    
+
     try {
         $stmt = $db->prepare("
             INSERT INTO key_movements (key_id, user_id, action, recipient_id, recipient_name, notes, created_at)
             VALUES (?, ?, ?, ?, ?, ?, NOW())
         ");
-        
+
         $stmt->execute([
             $keyId,
             current_user_id(),
@@ -85,19 +85,34 @@ function log_key_movement(
             $recipientName,
             $notes
         ]);
-        
+
         $movementId = (int)$db->lastInsertId();
+
+        // Prepara dettagli più esplicativi per audit
+        $details = ['movement_id' => $movementId];
         
+        if ($action === 'checkout') {
+            $details['Consegnato a'] = $recipientName ?: 'N/A';
+            if ($recipientId) {
+                $details['ID Ricevente'] = $recipientId;
+            }
+            if ($notes) {
+                $details['Note'] = $notes;
+            }
+        } elseif ($action === 'checkin') {
+            $details['Stato'] = 'Rientrata';
+            if ($notes) {
+                $details['Note'] = $notes;
+            }
+        } elseif ($notes) {
+            $details['Note'] = $notes;
+        }
+
         // Log audit correlato
-        audit_log($action, 'key', $keyId, [
-            'movement_id' => $movementId,
-            'recipient_id' => $recipientId,
-            'recipient_name' => $recipientName,
-            'notes' => $notes
-        ]);
-        
+        audit_log($action, 'key', $keyId, $details);
+
         return $movementId;
-        
+
     } catch (PDOException $e) {
         error_log("Key movement log error: " . $e->getMessage());
         return 0;
@@ -128,7 +143,7 @@ function get_key_movements(int $keyId, int $limit = 100): array {
         LEFT JOIN users u ON km.user_id = u.id
         LEFT JOIN users r ON km.recipient_id = r.id
         WHERE km.key_id = ?
-        ORDER BY km.created_at DESC
+        ORDER BY km.created_at DESC, km.id DESC
         LIMIT ?
     ");
     
@@ -204,7 +219,7 @@ function get_audit_log(array $filters = [], int $limit = 50, int $offset = 0): a
         FROM audit_log al
         LEFT JOIN users u ON al.user_id = u.id
         WHERE $whereClause
-        ORDER BY al.created_at DESC
+        ORDER BY al.created_at DESC, al.id DESC
         LIMIT ? OFFSET ?
     ";
     

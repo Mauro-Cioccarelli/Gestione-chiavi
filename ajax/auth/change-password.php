@@ -1,12 +1,12 @@
 <?php
 /**
  * AJAX: Cambio password
+ * Supporta sia il cambio password normale che il reset con token
  */
 
 define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
-require_login();
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -19,7 +19,48 @@ require_csrf($_POST['csrf_token'] ?? null);
 
 $input = $_POST;
 
-// Validazione
+// Se è presente il token, è un reset password
+if (isset($input['token'])) {
+    // Reset password con token (non richiede login)
+    $validator = new Validator($input);
+    $validator
+        ->required('token', 'Token')
+        ->required('new_password', 'Nuova password')
+        ->password('new_password', 'Nuova password');
+
+    if (!$validator->validate()) {
+        http_response_code(400);
+        echo json_encode(['error' => $validator->firstError()]);
+        exit;
+    }
+
+    $token = $input['token'];
+    $newPassword = $input['new_password'];
+
+    // Verifica password di conferma se presente
+    if (isset($input['confirm_password']) && $input['confirm_password'] !== $newPassword) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Le password non coincidono']);
+        exit;
+    }
+
+    $result = reset_password_with_token($token, $newPassword);
+
+    if ($result['success']) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Password reimpostata con successo. Effettua il login.'
+        ]);
+    } else {
+        http_response_code(400);
+        echo json_encode(['error' => $result['error']]);
+    }
+    exit;
+}
+
+// Cambio password normale (richiede login)
+require_login();
+
 $validator = new Validator($input);
 $validator
     ->required('old_password', 'Password attuale')

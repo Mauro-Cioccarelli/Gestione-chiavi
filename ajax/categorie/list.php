@@ -7,7 +7,8 @@ define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 require_login();
-if (!has_role(ROLE_ADMIN)) {
+// Operatori possono visualizzare, solo admin/god possono modificare
+if (!has_role(ROLE_ADMIN) && !has_role(ROLE_OPERATOR)) {
     http_response_code(403);
     echo json_encode(['error' => 'Permessi insufficienti']);
     exit;

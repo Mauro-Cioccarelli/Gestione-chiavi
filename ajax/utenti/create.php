@@ -41,8 +41,8 @@ $email = sanitize_email($input['email']);
 $password = $input['password'];
 $role = $input['role'] ?? ROLE_OPERATOR;
 
-// Verifica username esistente
-$stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
+// Verifica username esistente (deve essere univoco)
+$stmt = $db->prepare("SELECT id FROM users WHERE username = ? AND deleted_at IS NULL");
 $stmt->execute([$username]);
 if ($stmt->fetch()) {
     http_response_code(400);
@@ -50,14 +50,7 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Verifica email esistente
-$stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
-$stmt->execute([$email]);
-if ($stmt->fetch()) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Email già registrata']);
-    exit;
-}
+// Email può essere duplicata - nessun controllo di univocità
 
 // Crea utente
 $result = register_user([

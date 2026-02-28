@@ -40,9 +40,11 @@ class Database {
                 PDO::ATTR_PERSISTENT => false,
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
             ];
-            
+
             try {
                 self::$instance = new PDO($dsn, DB_USER, DB_PASS, $options);
+                // Imposta timezone di sessione MySQL uguale a PHP
+                self::$instance->exec("SET time_zone = '" . date('P') . "'");
             } catch (PDOException $e) {
                 error_log("DB Connection Error: " . $e->getMessage());
                 // Non mostrare dettagli errore in produzione

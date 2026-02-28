@@ -8,24 +8,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableElement = document.getElementById('categories-table');
     if (!tableElement) return;
 
+    // Determina se l'utente può modificare (admin/god) o solo visualizzare (operator)
+    const canEdit = window.CAN_EDIT_CATEGORIES !== false;
+
     // Inizializza Tabulator per categorie (richiede Tabulator 6 compatibile con fetch JSON array formattato da list.php)
     const table = new Tabulator(tableElement, {
         ajaxURL: window.APP_URL + "/ajax/categorie/list.php",
+        dataLoader: false,
         pagination: true,
         paginationMode: "remote",
         filterMode: "remote",
         sortMode: "remote",
+        layout: "fitColumns",
         paginationSize: 50,
         paginationSizeSelector: [20, 50, 100],
-        selectableRows: true, // Enable row selection
+        selectableRows: canEdit,
         columns: [
-            {
+            ...(canEdit ? [{
                 formatter: "rowSelection",
-                titleFormatter: "rowSelection",
+                width: 40,
                 hozAlign: "center",
                 headerSort: false,
-                width: 50
-            },
+                frozen: true,
+                headerFormatter: function() { return ''; }
+            }] : []),
             {
                 title: "ID",
                 field: "id",
@@ -66,27 +72,28 @@ document.addEventListener('DOMContentLoaded', function () {
             {
                 title: "Azioni",
                 field: "actions",
-                width: 140,
+                width: canEdit ? 140 : 0,
+                visible: canEdit,
                 headerSort: false,
                 hozAlign: "center",
                 formatter: function (cell) {
                     const data = cell.getRow().getData();
                     let html = '';
 
-                    html += `<button class="btn btn-sm btn-outline-primary me-1" 
+                    html += `<button class="btn btn-sm btn-outline-primary me-1"
                                 onclick="openEditCategory(${data.id}, '${escapeHtml(data.name)}', '${escapeHtml(data.description || '')}')"
                                 title="Modifica">
                                 <i class="bi bi-pencil"></i>
                              </button>`;
 
                     if (parseInt(data.keys_count) === 0) {
-                        html += `<button class="btn btn-sm btn-outline-danger" 
+                        html += `<button class="btn btn-sm btn-outline-danger"
                                     onclick="deleteCategory(${data.id}, '${escapeHtml(data.name)}')"
                                     title="Elimina">
                                     <i class="bi bi-trash"></i>
                                  </button>`;
                     } else {
-                        html += `<button class="btn btn-sm btn-outline-danger disabled opacity-50 pe-none" 
+                        html += `<button class="btn btn-sm btn-outline-danger disabled opacity-50 pe-none"
                                     title="Impossibile eliminare, contiene chiavi">
                                     <i class="bi bi-trash"></i>
                                  </button>`;
@@ -149,9 +156,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Gestione bottone Fusione in base a selezione
+    // Gestione bottone Fusione in base a selezione (solo admin/god)
     const mergeBtn = document.getElementById('btn-merge');
-    if (mergeBtn) {
+    if (mergeBtn && canEdit) {
         table.on("rowSelectionChanged", function (data, rows) {
             if (data.length > 0) {
                 mergeBtn.removeAttribute("disabled");
@@ -203,11 +210,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Modal forms setup
-    setupAjaxForm('form-new-category', 'modalNewCategory', '/ajax/categorie/create.php', () => { table.replaceData(); reloadCategorySelects(); });
-    setupAjaxForm('form-edit-category', 'modalEditCategory', '/ajax/categorie/update.php', () => { table.replaceData(); reloadCategorySelects(); });
-    setupAjaxForm('form-merge-category', 'modalMergeCategory', '/ajax/categorie/merge.php', () => { table.replaceData(); reloadCategorySelects(); });
-
+    // Modal forms setup (solo admin/god)
+    if (canEdit) {
+        setupAjaxForm('form-new-category', 'modalNewCategory', '/ajax/categorie/create.php', () => { table.replaceData(); reloadCategorySelects(); });
+        setupAjaxForm('form-edit-category', 'modalEditCategory', '/ajax/categorie/update.php', () => { table.replaceData(); reloadCategorySelects(); });
+        setupAjaxForm('form-merge-category', 'modalMergeCategory', '/ajax/categorie/merge.php', () => { table.replaceData(); reloadCategorySelects(); });
+    }
 });
 
 // ============================================================================

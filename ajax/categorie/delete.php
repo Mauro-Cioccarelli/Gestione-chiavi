@@ -7,7 +7,8 @@ define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 require_login();
-if (!has_role(ROLE_ADMIN)) {
+// Admin, god e operatori possono eliminare categorie
+if (!has_role(ROLE_ADMIN) && !has_role(ROLE_OPERATOR)) {
     http_response_code(403);
     echo json_encode(['error' => 'Permessi insufficienti']);
     exit;
@@ -40,6 +41,12 @@ $categoryId = (int)$input['id'];
 try {
     $db->beginTransaction();
 
+    // Ottieni nome categoria per il log
+    $stmtName = $db->prepare("SELECT name FROM key_categories WHERE id = ?");
+    $stmtName->execute([$categoryId]);
+    $category = $stmtName->fetch();
+    $categoryName = $category ? $category['name'] : 'Sconosciuto';
+
     // Controlla se esistono chiavi "attive" associate
     // Cancellare è permesso SOLO se tutte le chiavi sono state dismesse ('deleted_at' non nullo)
     $stmt = $db->prepare("SELECT COUNT(*) as active_count FROM `keys` WHERE category_id = ? AND deleted_at IS NULL");
@@ -58,6 +65,11 @@ try {
     $stmtDelete->execute([$categoryId]);
 
     $db->commit();
+
+    // Log audit
+    audit_log('category_deleted', 'category', $categoryId, [
+        'name' => $categoryName
+    ]);
 
     echo json_encode([
         'success' => true,
