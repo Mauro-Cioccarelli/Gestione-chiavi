@@ -73,6 +73,13 @@ if ($categoryId) {
     $params[] = $categoryId;
 }
 
+// Single key by ID
+$keyId = isset($_GET['id']) && $_GET['id'] !== '' ? (int)$_GET['id'] : null;
+if ($keyId) {
+    $where[] = "k.id = ?";
+    $params[] = $keyId;
+}
+
 $whereClause = implode(' AND ', $where);
 
 // Count total
@@ -84,10 +91,18 @@ $lastPage = max(1, ceil($total / $size));
 
 // Fetch data
 $offset = ($page - 1) * $size;
+
+// Se richiesta singola chiave, ignora pagination
+if ($keyId) {
+    $offset = 0;
+    $size = 1;
+}
+
 $sql = "
     SELECT
         k.id,
         k.identifier,
+        k.category_id,
         kc.name as category_name,
         k.status,
         k.created_at,

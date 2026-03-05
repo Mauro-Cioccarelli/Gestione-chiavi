@@ -350,6 +350,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         });
     }
+
+    // Form edit key
+    const formEditKey = document.getElementById('form-edit-key');
+    if (formEditKey) {
+        formEditKey.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            showLoading();
+
+            fetchJSON(window.APP_URL + '/ajax/chiavi/update.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('modalEditKey')).hide();
+                        table.replaceData();
+                        showAlert('success', data.message);
+                        formEditKey.reset();
+                    } else {
+                        showAlert('danger', data.error);
+                    }
+                })
+                .catch(err => {
+                    showAlert('danger', 'Errore di comunicazione: ' + err.message);
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        });
+    }
 });
 
 // ============================================================================
@@ -390,9 +422,22 @@ function viewHistory(keyId) {
 /**
  * Modifica chiave
  */
-function editKey(keyId) {
-    // Implementare modal modifica o redirect
-    window.location.href = window.APP_URL + '/chiavi/modifica.php?id=' + keyId;
+function editKey(keyId, categoryName, identifier) {
+    fetchJSON(window.APP_URL + '/ajax/chiavi/list.php?id=' + keyId)
+        .then(data => {
+            if (data && data.data && data.data.length > 0) {
+                const key = data.data[0];
+                document.getElementById('edit-key-id').value = key.id;
+                document.getElementById('edit-category').value = key.category_id;
+                document.getElementById('edit-identifier').value = key.identifier;
+                new bootstrap.Modal(document.getElementById('modalEditKey')).show();
+            } else {
+                showAlert('danger', 'Chiave non trovata');
+            }
+        })
+        .catch(err => {
+            showAlert('danger', 'Errore nel caricamento dei dati: ' + err.message);
+        });
 }
 
 /**

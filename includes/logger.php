@@ -109,7 +109,7 @@ function log_key_movement(
         }
 
         // Log audit correlato
-        audit_log($action, 'key', $keyId, $details);
+        audit_log($action, 'key', $keyId, $details, $notes);
 
         return $movementId;
 

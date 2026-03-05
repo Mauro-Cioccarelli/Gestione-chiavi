@@ -110,6 +110,27 @@ define('DB_PASS', 'tua_password_sicura');
 - ✅ Rientro chiavi con note
 - ✅ Storico movimenti per chiave
 - ✅ Eliminazione logica (soft delete)
+- ✅ Modifica chiave (nome e categoria)
+- ✅ **Comandi vocali** per consegne e rientri
+
+### Comandi Vocali
+Il sistema supporta il riconoscimento vocale per eseguire operazioni rapide:
+
+**Attivazione:**
+- Clicca sul pulsante **Voce** nella pagina inventario chiavi
+- Premi la **barra spaziatrice** (quando nessun campo input è focalizzato)
+
+**Comandi disponibili:**
+- `"cerca [termine]"` - Cerca chiavi per nome o categoria
+- `"consegna [chiave] a [nome]"` - Consegna una chiave a una persona
+- `"consegna chiave [chiave]"` - Consegna una chiave (senza specificare il ricevente)
+- `"rientro [chiave]"` - Registra il rientro di una chiave
+- `"annulla"` - Annulla l'operazione corrente
+
+**Esempi:**
+- *"consegna chiave Rossi a Mario Bianchi"*
+- *"rientro chiave Porta ingresso"*
+- *"cerca Rossi"*
 
 ### Gestione Utenti
 - ✅ Creazione utenti (admin)
@@ -139,6 +160,7 @@ define('DB_PASS', 'tua_password_sicura');
 | `/ajax/chiavi/create.php` | POST | Crea nuova chiave |
 | `/ajax/chiavi/update.php` | POST | Aggiorna chiave |
 | `/ajax/chiavi/delete.php` | POST | Elimina chiave (soft) |
+| `/ajax/chiavi/restore.php` | POST | Ripristina chiave dismessa |
 | `/ajax/chiavi/checkout.php` | POST | Consegna chiave |
 | `/ajax/chiavi/checkin.php` | POST | Rientro chiave |
 | `/ajax/chiavi/movements.php` | GET | Storico movimenti |
@@ -177,6 +199,8 @@ Tutte le operazioni significative vengono registrate:
 - Creazione/modifica/eliminazione chiavi
 - Consegne e rientri chiavi
 - Richieste reset password
+
+Il log audit è visibile a **tutti gli utenti loggati**.
 
 ## Personalizzazione
 

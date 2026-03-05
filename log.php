@@ -1,6 +1,6 @@
 <?php
 /**
- * Log Audit (admin e operatori)
+ * Log Audit (tutti i ruoli)
  */
 
 define('APP_ROOT', true);

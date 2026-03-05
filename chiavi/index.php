@@ -195,7 +195,7 @@ include __DIR__ . '/../includes/layout/header.php';
                 <div class="modal-body">
                     <?= csrf_field() ?>
                     <input type="hidden" name="key_id" id="checkin-key-id">
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Categoria</label>
                         <input type="text" class="form-control" id="checkin-category-name" readonly>
@@ -205,10 +205,10 @@ include __DIR__ . '/../includes/layout/header.php';
                         <label class="form-label">Chiave</label>
                         <input type="text" class="form-control" id="checkin-key-name" readonly>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="checkin-notes" class="form-label">Note (opzionale)</label>
-                        <textarea name="notes" id="checkin-notes" class="form-control" rows="2" 
+                        <textarea name="notes" id="checkin-notes" class="form-control" rows="2"
                                   placeholder="Stato chiave, osservazioni..."></textarea>
                     </div>
                 </div>
@@ -216,6 +216,49 @@ include __DIR__ . '/../includes/layout/header.php';
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-box-arrow-in-down me-1"></i>Registra Rientro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifica Chiave -->
+<div class="modal fade" id="modalEditKey" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form-edit-key">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil me-2"></i>Modifica Chiave
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" id="edit-key-id">
+
+                    <div class="mb-3">
+                        <label for="edit-category" class="form-label form-label-required">Categoria</label>
+                        <select name="category_id" id="edit-category" class="form-select" required>
+                            <option value="">Seleziona categoria...</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-identifier" class="form-label form-label-required">Identificativo</label>
+                        <input type="text" name="identifier" id="edit-identifier" class="form-control"
+                               placeholder="Es: Rossi Mario, Porta ingresso, ..." required maxlength="100">
+                        <div class="form-text">Inserisci il proprietario o un identificativo della chiave</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Salva modifiche
                     </button>
                 </div>
             </form>
