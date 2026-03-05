@@ -46,13 +46,13 @@ include __DIR__ . '/../includes/layout/header.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <!-- Filtri -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                    <div class="row mb-3 align-items-end">
+                        <div class="col-md-5">
                             <label for="search-input" class="form-label visually-hidden">Cerca</label>
-                            <input type="text" id="search-input" class="form-control" 
+                            <input type="text" id="search-input" class="form-control"
                                    placeholder="Cerca per chiave o categoria...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="status-filter" class="form-label visually-hidden">Stato</label>
                             <select id="status-filter" class="form-select">
                                 <option value="">Tutti gli stati</option>
@@ -61,10 +61,12 @@ include __DIR__ . '/../includes/layout/header.php';
                                 <option value="dismised">Dismessa</option>
                             </select>
                         </div>
-                        <div class="col-md-3 text-end">
-                            <button class="btn btn-outline-primary me-2" id="btn-voice-command" title="Comandi vocali">
-                                <i class="bi bi-mic-fill me-1"></i> Voce
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-primary w-100" id="btn-voice-command" title="Voce">
+                                <i class="bi bi-mic-fill me-2"></i> Voce
                             </button>
+                        </div>
+                        <div class="col-md-3 text-end">
                             <button class="btn btn-outline-secondary" id="btn-refresh" title="Aggiorna">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
@@ -74,7 +76,7 @@ include __DIR__ . '/../includes/layout/header.php';
                     <!-- Stato riconoscimento vocale -->
                     <div class="mb-3" id="voice-status-container">
                         <div id="voice-status" class="alert alert-light py-2 mb-2" role="status">
-                            Comandi vocali disponibili: "consegna chiave a [nome]", "rientro chiave", "annulla".
+                            Comandi vocali: "cerca [termine]" · "consegna [chiave] a [nome]" · "consegna chiave [chiave]" · "rientro [chiave]" · "annulla"
                         </div>
                         <div id="voice-recognized" class="small text-muted d-none">
                             Testo riconosciuto: <span id="voice-recognized-text"></span>
@@ -147,10 +149,15 @@ include __DIR__ . '/../includes/layout/header.php';
                     <input type="hidden" name="key_id" id="checkout-key-id">
                     
                     <div class="mb-3">
+                        <label class="form-label">Categoria</label>
+                        <input type="text" class="form-control" id="checkout-category-name" readonly>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Chiave</label>
                         <input type="text" class="form-control" id="checkout-key-name" readonly>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="checkout-recipient" class="form-label form-label-required">Ricevente</label>
                         <input type="text" name="recipient_name" id="checkout-recipient" class="form-control" 
@@ -269,11 +276,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    voiceButton.addEventListener('click', function () {
+    function triggerVoice() {
         const started = voice.start();
         if (!started && !voice.isListening()) {
             updateStatus('Impossibile avviare il riconoscimento vocale.', 'alert-warning');
         }
+    }
+
+    voiceButton.addEventListener('click', triggerVoice);
+
+    // Shortcut: Spacebar attiva il microfono solo se il focus non è su un campo interattivo
+    document.addEventListener('keydown', function (e) {
+        if (e.code !== 'Space') return;
+        const tag = document.activeElement ? document.activeElement.tagName : '';
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(tag)) return;
+        e.preventDefault();
+        triggerVoice();
     });
 });
 </script>

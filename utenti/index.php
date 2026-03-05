@@ -1,15 +1,21 @@
 <?php
 /**
- * Gestione Utenti (solo admin)
+ * Gestione Utenti
+ * - Admin: può creare, modificare, eliminare
+ * - Operator: sola visualizzazione
  */
 
 define('APP_ROOT', true);
 require_once __DIR__ . '/../includes/bootstrap.php';
 
-require_admin();
+// Accesso consentito a operator e superiori
+require_role(ROLE_OPERATOR);
 
 $pageTitle = 'Gestione Utenti';
 $extraJs = ['/assets/js/utenti.js'];
+
+// Solo admin e god possono creare nuovi utenti
+$canCreate = has_role(ROLE_ADMIN);
 
 include __DIR__ . '/../includes/layout/header.php';
 ?>
@@ -22,9 +28,11 @@ include __DIR__ . '/../includes/layout/header.php';
                 <h2 class="mb-0">
                     <i class="bi bi-people me-2"></i><?= htmlspecialchars($pageTitle) ?>
                 </h2>
+                <?php if ($canCreate): ?>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNewUser">
                     <i class="bi bi-plus-lg me-1"></i> Nuovo Utente
                 </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -55,7 +63,8 @@ include __DIR__ . '/../includes/layout/header.php';
     </div>
 </div>
 
-<!-- Modal Nuovo Utente -->
+<!-- Modal Nuovo Utente (solo admin) -->
+<?php if ($canCreate): ?>
 <div class="modal fade" id="modalNewUser" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -68,26 +77,26 @@ include __DIR__ . '/../includes/layout/header.php';
                 </div>
                 <div class="modal-body">
                     <?= csrf_field() ?>
-                    
+
                     <div class="mb-3">
                         <label for="new-username" class="form-label form-label-required">Username</label>
-                        <input type="text" name="username" id="new-username" class="form-control" 
+                        <input type="text" name="username" id="new-username" class="form-control"
                                required maxlength="50" placeholder="Username">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="new-email" class="form-label form-label-required">Email</label>
-                        <input type="email" name="email" id="new-email" class="form-control" 
+                        <input type="email" name="email" id="new-email" class="form-control"
                                required maxlength="255" placeholder="email@esempio.it">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="new-password" class="form-label form-label-required">Password</label>
-                        <input type="password" name="password" id="new-password" class="form-control" 
+                        <input type="password" name="password" id="new-password" class="form-control"
                                required minlength="6" placeholder="Password iniziale">
                         <div class="form-text">La password dovrà essere cambiata al primo accesso</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="new-role" class="form-label">Ruolo</label>
                         <select name="role" id="new-role" class="form-select">
@@ -109,8 +118,10 @@ include __DIR__ . '/../includes/layout/header.php';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<!-- Modal Modifica Utente -->
+<!-- Modal Modifica Utente (solo admin) -->
+<?php if ($canCreate): ?>
 <div class="modal fade" id="modalEditUser" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -124,17 +135,17 @@ include __DIR__ . '/../includes/layout/header.php';
                 <div class="modal-body">
                     <?= csrf_field() ?>
                     <input type="hidden" name="id" id="edit-user-id">
-                    
+
                     <div class="mb-3">
                         <label for="edit-username" class="form-label">Username</label>
                         <input type="text" name="username" id="edit-username" class="form-control" readonly>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="edit-email" class="form-label form-label-required">Email</label>
                         <input type="email" name="email" id="edit-email" class="form-control" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="edit-role" class="form-label">Ruolo</label>
                         <select name="role" id="edit-role" class="form-select" <?= has_role(ROLE_GOD) ? '' : 'disabled' ?>>
@@ -148,7 +159,7 @@ include __DIR__ . '/../includes/layout/header.php';
                             <div class="form-text">Solo un utente god può modificare i ruoli</div>
                         <?php endif; ?>
                     </div>
-                    
+
                     <div class="mb-3 form-check">
                         <input type="checkbox" name="force_password_change" id="edit-force-pw" class="form-check-input">
                         <label class="form-check-label" for="edit-force-pw">
@@ -166,6 +177,7 @@ include __DIR__ . '/../includes/layout/header.php';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?php 
 echo "<script>

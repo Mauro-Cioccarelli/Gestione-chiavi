@@ -48,13 +48,14 @@ document.addEventListener('DOMContentLoaded', function () {
             {
                 title: "Stato",
                 field: "status",
-                width: 130,
+                widthGrow: 1.5,
                 headerSort: true,
                 formatter: function (cell) {
                     const status = cell.getValue();
+                    const data = cell.getRow().getData();
                     const labels = {
                         'available': '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Disponibile</span>',
-                        'in_delivery': '<span class="badge bg-warning text-dark"><i class="bi bi-box-arrow-up me-1"></i>In consegna</span>',
+                        'in_delivery': '<span class="badge bg-warning text-dark" data-bs-toggle="tooltip" title="' + (data.recipient_name || '...') + '"><i class="bi bi-box-arrow-up me-1"></i>In consegna <span class="opacity-75" style="font-size: 0.85em">(' + (data.recipient_name || '...') + ')</span></span>',
                         'dismised': '<span class="badge bg-danger"><i class="bi bi-trash me-1"></i>Dismessa</span>'
                     };
                     return labels[status] || status;
@@ -87,8 +88,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     let html = '';
 
                     if (data.status === 'available') {
-                        html += `<button class="btn btn-sm btn-warning me-1" 
-                                    onclick="openCheckout(${data.id}, '${escapeHtml(data.identifier)}')"
+                        html += `<button class="btn btn-sm btn-warning me-1"
+                                    onclick="openCheckout(${data.id}, '${escapeHtml(data.identifier)}', '${escapeHtml(data.category_name || '')}')"
                                     title="Consegna">
                                     <i class="bi bi-box-arrow-up"></i>
                                  </button>`;
@@ -190,11 +191,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Refresh
+    // Inizializza tooltip dopo il caricamento dei dati
+    table.on("dataLoaded", function () {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    // Refresh: pulisce i filtri e ricarica
     const refreshBtn = document.getElementById('btn-refresh');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function () {
-            table.replaceData();
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
+            const statusFilter = document.getElementById('status-filter');
+            if (statusFilter) statusFilter.value = '';
+            applyCustomFilters();
         });
     }
 
@@ -346,9 +359,12 @@ document.addEventListener('DOMContentLoaded', function () {
 /**
  * Apre modal consegna
  */
-function openCheckout(keyId, keyName) {
+function openCheckout(keyId, keyName, categoryName) {
     document.getElementById('checkout-key-id').value = keyId;
     document.getElementById('checkout-key-name').value = keyName;
+    const catField = document.getElementById('checkout-category-name');
+    if (catField) catField.value = categoryName || '';
+    document.getElementById('checkout-recipient').value = '';
     document.getElementById('checkout-recipient').focus();
     new bootstrap.Modal(document.getElementById('modalCheckout')).show();
 }

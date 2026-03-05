@@ -40,18 +40,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         </a>
     </li>
 
-    <!-- Categorie (admin) -->
-    <?php if (has_role(ROLE_ADMIN)): ?>
-    <li class="nav-item">
-        <a class="nav-link <?= str_ends_with($currentPath, 'categorie.php') ? 'active' : '' ?>"
-           href="<?= APP_URL ?>/chiavi/categorie.php">
-            <i class="bi bi-folder"></i>
-            <span>Categorie</span>
-        </a>
-    </li>
-    <?php endif; ?>
-
-    <!-- Categorie (operator) - sola visualizzazione -->
+    <!-- Categorie (operatori e superiori) -->
     <?php if (has_role(ROLE_OPERATOR)): ?>
     <li class="nav-item">
         <a class="nav-link <?= str_ends_with($currentPath, 'categorie.php') ? 'active' : '' ?>"
@@ -61,23 +50,12 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         </a>
     </li>
     <?php endif; ?>
-    
-    <!-- Utenti (admin) -->
-    <?php if (has_role(ROLE_ADMIN)): ?>
+
+    <!-- Utenti (tutti tranne guest) -->
+    <?php if (has_role(ROLE_OPERATOR)): ?>
     <li class="nav-item">
-        <a class="nav-link <?= str_contains($currentPath, '/utenti/') && !str_contains($currentPath, 'profilo') && !str_contains($currentPath, 'index-operator') ? 'active' : '' ?>"
+        <a class="nav-link <?= str_contains($currentPath, '/utenti/') && !str_contains($currentPath, 'profilo') ? 'active' : '' ?>"
            href="<?= APP_URL ?>/utenti/index.php">
-            <i class="bi bi-people"></i>
-            <span>Utenti</span>
-        </a>
-    </li>
-    <?php endif; ?>
-
-    <!-- Utenti (operator - sola lettura) -->
-    <?php if (has_role(ROLE_OPERATOR)): ?>
-    <li class="nav-item">
-        <a class="nav-link <?= str_contains($currentPath, '/utenti/index-operator.php') ? 'active' : '' ?>"
-           href="<?= APP_URL ?>/utenti/index-operator.php">
             <i class="bi bi-people"></i>
             <span>Utenti</span>
         </a>

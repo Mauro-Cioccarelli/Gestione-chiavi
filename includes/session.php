@@ -28,20 +28,6 @@ function session_regenerate_secure(): void {
  */
 function session_destroy_secure(): void {
     $_SESSION = [];
-    
-    if (ini_get("session.use_cookies")) {
-        $params = session_get_cookie_params();
-        setcookie(
-            session_name(),
-            '',
-            time() - 42000,
-            $params["path"],
-            $params["domain"],
-            $params["secure"] ?? false,
-            $params["httponly"] ?? true
-        );
-    }
-    
     session_destroy();
 }
 
@@ -68,15 +54,40 @@ function is_logged_in(): bool {
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         return false;
     }
-    
+
     // Timeout sessione (1 ora di inattività)
     if (time() - ($_SESSION['last_activity'] ?? 0) > 3600) {
         session_destroy_secure();
         return false;
     }
-    
+
     $_SESSION['last_activity'] = time();
     return true;
+}
+
+/**
+ * Verifica se utente deve cambiare password e reindirizza
+ * Da chiamare dopo require_login() nelle pagine
+ */
+function check_force_password_change(): void {
+    if (!is_logged_in()) return;
+    
+    // Non reindirizzare se siamo già nelle pagine di gestione password/logout
+    $currentPage = $_SERVER['PHP_SELF'] ?? '';
+    if (str_contains($currentPage, 'cambio-password.php')) return;
+    if (str_contains($currentPage, 'change-password.php')) return;
+    if (str_contains($currentPage, 'logout.php')) return;
+    
+    // Controlla se force_password_change è impostato
+    $db = db();
+    $stmt = $db->prepare("SELECT force_password_change FROM users WHERE id = ?");
+    $stmt->execute([current_user_id()]);
+    $user = $stmt->fetch();
+    
+    if ($user && $user['force_password_change']) {
+        header('Location: ' . APP_URL . '/utenti/cambio-password.php?force=1');
+        exit;
+    }
 }
 
 /**

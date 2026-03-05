@@ -15,11 +15,6 @@ if (!defined('APP_ROOT')) {
     define('APP_ROOT', true);
 }
 
-// FORZA VISUALIZZAZIONE ERRORI (SVILUPPO)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 // Carica configurazione
 require_once __DIR__ . '/config.php';
 
@@ -44,7 +39,7 @@ require_once BASE_PATH . '/assets/PHPMailer-7.0.2/src/SMTP.php';
 function require_login(): void {
     if (!is_logged_in()) {
         // Per richieste AJAX, ritorna JSON
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
             http_response_code(401);
@@ -54,16 +49,19 @@ function require_login(): void {
             ]);
             exit;
         }
-        
+
         // Salva URL di destinazione per redirect dopo login
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
-        
+
         header('Location: ' . APP_URL . '/login.php');
         exit;
     }
-    
+
     // Aggiorna timestamp attività
     session_touch();
+    
+    // Verifica se utente deve cambiare password
+    check_force_password_change();
 }
 
 /**

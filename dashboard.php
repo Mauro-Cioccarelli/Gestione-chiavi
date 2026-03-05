@@ -142,7 +142,7 @@ include __DIR__ . '/includes/layout/header.php';
                 </div>
                 <?php elseif (has_role(ROLE_OPERATOR)): ?>
                 <div class="card-footer bg-white border-0">
-                    <a href="<?= APP_URL ?>/utenti/index-operator.php" class="text-decoration-none small">
+                    <a href="<?= APP_URL ?>/utenti/index.php" class="text-decoration-none small">
                         Visualizza <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>

@@ -100,16 +100,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Migrazione dati da legacy
             $legacyDb = 'chiavi_old';
             $mainDb = DB_NAME;
-            
+
+            // Disabilita strict mode per gestire date '0000-00-00 00:00:00'
+            $db->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'NO_ZERO_DATE', '')");
+            $db->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'NO_ZERO_IN_DATE', '')");
+            $db->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'STRICT_TRANS_TABLES', '')");
+            $db->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'STRICT_ALL_TABLES', '')");
+
             $db->exec("USE `$legacyDb`");
-            
-            // 1. Migrazione utenti (salvo admin già esistente)
+
+            // Rimuovi vincolo UNIQUE su email dalla tabella users (permetti email duplicate)
+            try {
+                $db->exec("ALTER TABLE `$mainDb`.users DROP INDEX `uk_email`");
+            } catch (Exception $e) {
+                // Ignora se l'indice non esiste già
+            }
+
+            // 1. Migrazione utenti - PRIMA FASE: utenti da keys_users
+            // Usa COALESCE per email vuote o duplicate
             $stmt = $db->query("
                 INSERT INTO `$mainDb`.users (id, username, email, password_hash, role, force_password_change, last_login, created_at)
-                SELECT 
+                SELECT
                     us_id,
                     us_name,
-                    us_email,
+                    CASE 
+                        WHEN us_email IS NULL OR us_email = '' THEN CONCAT('user_', us_id, '@chiavi.test')
+                        ELSE us_email
+                    END,
                     us_pwd,
                     CASE WHEN us_level >= 2 THEN 'admin' ELSE 'operator' END,
                     us_pw_cng,
@@ -120,6 +137,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ON DUPLICATE KEY UPDATE username = VALUES(username)
             ");
             $usersMigrated = $stmt->rowCount();
+
+            // 1b. Migrazione utenti - SECONDA FASE: utenti da keys_log (log_user)
+            // Inserisce utenti che compaiono nei log ma non in keys_users
+            // Email: usa username@chiavi.test per evitare duplicati
+            $stmt = $db->query("
+                INSERT INTO `$mainDb`.users (username, email, password_hash, role, force_password_change, created_at)
+                SELECT DISTINCT
+                    log.log_user,
+                    CONCAT('user_', log.log_user, '@chiavi.test'),
+                    '',  -- password vuota per utenti da log
+                    'operator',
+                    1,
+                    NOW()
+                FROM keys_log log
+                LEFT JOIN keys_users ku ON log.log_user = ku.us_name
+                LEFT JOIN `$mainDb`.users u ON log.log_user = u.username
+                WHERE ku.us_id IS NULL  -- Non esiste in keys_users
+                  AND u.id IS NULL      -- Non esiste già nel nuovo DB
+                  AND log.log_user IS NOT NULL
+                  AND log.log_user != ''
+                ON DUPLICATE KEY UPDATE username = VALUES(username)
+            ");
+
+            // 1c. Migrazione utenti - TERZA FASE: utenti da keys_k (k_cons_from)
+            // Inserisce utenti che compaiono nelle consegne ma non altrove
+            $stmt = $db->query("
+                INSERT INTO `$mainDb`.users (username, email, password_hash, role, force_password_change, created_at)
+                SELECT DISTINCT
+                    k.k_cons_from,
+                    CONCAT('user_', k.k_cons_from, '@chiavi.test'),
+                    '',  -- password vuota per utenti da consegne
+                    'operator',
+                    1,
+                    NOW()
+                FROM keys_k k
+                LEFT JOIN keys_users ku ON k.k_cons_from = ku.us_name
+                LEFT JOIN `$mainDb`.users u ON k.k_cons_from = u.username
+                WHERE ku.us_id IS NULL  -- Non esiste in keys_users
+                  AND u.id IS NULL      -- Non esiste già nel nuovo DB
+                  AND k.k_cons_from IS NOT NULL
+                  AND k.k_cons_from != ''
+                ON DUPLICATE KEY UPDATE username = VALUES(username)
+            ");
             
             // 2. Migrazione categorie
             $stmt = $db->query("
@@ -144,67 +204,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
             $db->exec("TRUNCATE TABLE _key_id_mapping");
-            
-            // 3a. Identifica chiavi duplicate e determina quale mantenere
+
+            // 3a. Crea tabella temporanea con i vincitori (chiave da mantenere per ogni categoria+nome)
             // Priorità: NON DISMESSA (k_canc != 'c') > DISMESSA, poi ID più alto
-            $stmt = $db->query("
+            $db->exec("
+                CREATE TEMPORARY TABLE IF NOT EXISTS _key_winners (
+                    k_cat VARCHAR(255),
+                    k_name VARCHAR(255),
+                    winner_id INT
+                )
+            ");
+            $db->exec("TRUNCATE TABLE _key_winners");
+
+            // Inserisci vincitori: priorità a non dismesse, poi ID più alto
+            // Usiamo una subquery con ORDER BY e LIMIT per gruppo
+            $db->exec("
+                INSERT INTO _key_winners (k_cat, k_name, winner_id)
+                SELECT k1.k_cat, k1.k_name, k1.k_id AS winner_id
+                FROM keys_k k1
+                INNER JOIN (
+                    SELECT k_cat, k_name,
+                           MAX(CASE WHEN k_canc IS NULL OR k_canc != 'c' THEN k_id END) AS non_canc_id,
+                           MAX(k_id) AS max_id
+                    FROM keys_k
+                    GROUP BY k_cat, k_name
+                ) k2 ON k1.k_cat = k2.k_cat AND k1.k_name = k2.k_name
+                WHERE k1.k_id = COALESCE(k2.non_canc_id, k2.max_id)
+            ");
+
+            // 3b. Popola _key_id_mapping unendo con i vincitori
+            $db->exec("
                 INSERT INTO _key_id_mapping (old_id, new_id, is_deduplicated, kept_id)
                 SELECT
                     k.k_id AS old_id,
-                    CASE
-                        -- Questa è la chiave da mantenere?
-                        WHEN k.k_id = (
-                            SELECT k2.k_id
-                            FROM keys_k k2
-                            WHERE k2.k_cat = k.k_cat AND k2.k_name = k.k_name
-                            ORDER BY
-                                -- Priorità: non dismesse prima (k_canc != 'c')
-                                CASE
-                                    WHEN k2.k_canc IS NULL OR k2.k_canc != 'c' THEN 0
-                                    ELSE 1
-                                END ASC,
-                                -- Poi ID più alto
-                                k2.k_id DESC
-                            LIMIT 1
-                        ) THEN k.k_id  -- Questa è la vincitrice, new_id = old_id
-                        ELSE NULL  -- Questa sarà deduplicata, new_id sarà aggiornato dopo
-                    END AS new_id,
-                    CASE
-                        WHEN k.k_id = (
-                            SELECT k2.k_id
-                            FROM keys_k k2
-                            WHERE k2.k_cat = k.k_cat AND k2.k_name = k.k_name
-                            ORDER BY
-                                CASE
-                                    WHEN k2.k_canc IS NULL OR k2.k_canc != 'c' THEN 0
-                                    ELSE 1
-                                END ASC,
-                                k2.k_id DESC
-                            LIMIT 1
-                        ) THEN 0
-                        ELSE 1
-                    END AS is_deduplicated,
-                    (
-                        SELECT k2.k_id
-                        FROM keys_k k2
-                        WHERE k2.k_cat = k.k_cat AND k2.k_name = k.k_name
-                        ORDER BY
-                            CASE
-                                WHEN k2.k_canc IS NULL OR k2.k_canc != 'c' THEN 0
-                                ELSE 1
-                            END ASC,
-                            k2.k_id DESC
-                        LIMIT 1
-                    ) AS kept_id
+                    w.winner_id AS new_id,
+                    CASE WHEN k.k_id = w.winner_id THEN 0 ELSE 1 END AS is_deduplicated,
+                    w.winner_id AS kept_id
                 FROM keys_k k
-            ");
-            
-            // 3b. Aggiorna new_id per le chiavi deduplicate (puntano alla vincitrice)
-            $stmt = $db->query("
-                UPDATE _key_id_mapping m
-                INNER JOIN _key_id_mapping winner ON m.kept_id = winner.old_id
-                SET m.new_id = winner.new_id
-                WHERE m.is_deduplicated = 1
+                INNER JOIN _key_winners w ON k.k_cat = w.k_cat AND k.k_name = w.k_name
             ");
             
             // 3c. Inserisci chiavi nel DB principale (solo vincitrici)
@@ -214,9 +251,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     m.new_id,
                     kc.id,
                     k.k_name,
-                    CASE 
+                    CASE
                         WHEN k.k_canc = 'c' THEN 'dismised'
-                        WHEN k.k_out IS NULL OR k.k_out = '0000-00-00 00:00:00' OR k.k_out = 0 THEN 'available'
+                        WHEN NULLIF(k.k_out, '0000-00-00 00:00:00') IS NULL THEN 'available'
                         ELSE 'in_delivery'
                     END,
                     NOW(),
@@ -235,33 +272,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // 4. Migrazione movimenti - con mapping ID deduplicati
             // I movimenti delle chiavi deduplicate puntano alla chiave vincitrice
+            // Filtra solo movimenti con utente esistente
             $stmt = $db->query("
                 INSERT INTO `$mainDb`.key_movements (key_id, user_id, action, notes, created_at)
                 SELECT
-                    m.new_id AS key_id,  -- Usa nuovo ID (solo movimenti con chiave valida)
-                    (SELECT id FROM `$mainDb`.users WHERE username = log.log_user LIMIT 1),
+                    m.new_id AS key_id,
+                    u.id AS user_id,
                     'update',
                     CONCAT('[MIGRAZIONE] ', log.log_action),
-                    log.log_date
+                    NULLIF(log.log_date, '0000-00-00 00:00:00')
                 FROM keys_log log
                 INNER JOIN _key_id_mapping m ON log.log_kid = m.old_id
+                INNER JOIN `$mainDb`.users u ON log.log_user = u.username
                 WHERE m.new_id IS NOT NULL  -- Solo movimenti per chiavi che esistono nel nuovo DB
             ");
 
             // 5. Movimenti per chiavi in consegna - con mapping ID deduplicati
+            // Filtra solo movimenti con utente esistente
             $stmt = $db->query("
                 INSERT INTO `$mainDb`.key_movements (key_id, user_id, action, recipient_name, notes, created_at)
                 SELECT
-                    m.new_id AS key_id,  -- Usa nuovo ID (solo movimenti con chiave valida)
-                    (SELECT id FROM `$mainDb`.users WHERE username = k.k_cons_from LIMIT 1),
+                    m.new_id AS key_id,
+                    u.id AS user_id,
                     'checkout',
                     k.k_cons_to,
                     'Movimento migrato da legacy',
-                    k.k_out
+                    NULLIF(k.k_out, '0000-00-00 00:00:00')
                 FROM keys_k k
                 INNER JOIN _key_id_mapping m ON k.k_id = m.old_id
+                INNER JOIN `$mainDb`.users u ON k.k_cons_from = u.username
                 WHERE m.new_id IS NOT NULL  -- Solo chiavi che esistono nel nuovo DB
-                  AND k.k_out IS NOT NULL AND k.k_out != '0000-00-00 00:00:00' AND k.k_out != 0
+                  AND NULLIF(k.k_out, '0000-00-00 00:00:00') IS NOT NULL
             ");
 
             // 6. Log audit per deduplicazione
@@ -285,9 +326,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Torna al DB principale
             $db->exec("USE `" . DB_NAME . "`");
 
-            $dedupMessage = $deduplicatedCount > 0 
-                ? "$usersMigrated utenti, $keysMigrated chiavi importate, $deduplicatedCount chiavi deduplicate"
-                : "$usersMigrated utenti, $keysMigrated chiavi importate";
+            // Conta totale utenti migrati
+            $stmt = $db->query("SELECT COUNT(*) as total FROM `$mainDb`.users WHERE id > 1");
+            $totalUsers = $stmt->fetch()['total'];
+
+            $dedupMessage = $deduplicatedCount > 0
+                ? "$totalUsers utenti, $keysMigrated chiavi importate, $deduplicatedCount chiavi deduplicate"
+                : "$totalUsers utenti, $keysMigrated chiavi importate";
             $success[] = "Migrazione dati completata: " . $dedupMessage;
             
             // Registra migrazione dati

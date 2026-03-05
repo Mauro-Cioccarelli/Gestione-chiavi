@@ -50,7 +50,8 @@ if (!empty($_GET['filter']) && is_array($_GET['filter'])) {
 $search = $_GET['search'] ?? '';
 if ($search) {
     $search = sanitize_string($search);
-    $where[] = "(k.identifier LIKE ? OR kc.name LIKE ?)";
+    $where[] = "(k.identifier LIKE ? OR kc.name LIKE ? OR CONCAT(kc.name, ' ', k.identifier) LIKE ?)";
+    $params[] = "%$search%";
     $params[] = "%$search%";
     $params[] = "%$search%";
 }

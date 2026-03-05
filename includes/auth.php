@@ -99,29 +99,24 @@ function logout(): void {
  */
 function register_user(array $data): array {
     $db = db();
-    
+
     try {
-        // Verifica username esistente
-        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
+        // Verifica username esistente (esclusi eliminati)
+        $stmt = $db->prepare("SELECT id FROM users WHERE username = ? AND deleted_at IS NULL");
         $stmt->execute([$data['username']]);
         if ($stmt->fetch()) {
             return ['success' => false, 'error' => 'Username già esistente'];
         }
-        
-        // Verifica email esistente
-        $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$data['email']]);
-        if ($stmt->fetch()) {
-            return ['success' => false, 'error' => 'Email già registrata'];
-        }
-        
+
+        // Email può essere duplicata - nessun controllo di univocità
+
         // Hash password
         $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
-        
-        // Inserisci utente
+
+        // Inserisci utente con force_password_change = 1 (cambio password al primo accesso)
         $stmt = $db->prepare("
-            INSERT INTO users (username, email, password_hash, role, created_at)
-            VALUES (?, ?, ?, ?, NOW())
+            INSERT INTO users (username, email, password_hash, role, force_password_change, created_at)
+            VALUES (?, ?, ?, ?, 1, NOW())
         ");
         $stmt->execute([
             $data['username'],
@@ -208,36 +203,36 @@ function change_password(int $userId, string $oldPassword, string $newPassword):
 
 /**
  * Genera token per reset password
- * 
- * @param string $email Email utente
+ *
+ * @param string $username Username utente
  * @return array ['success' => bool, 'error' => ?string, 'token' => ?string]
  */
-function generate_password_reset_token(string $email): array {
+function generate_password_reset_token(string $username): array {
     $db = db();
-    
+
     try {
-        $stmt = $db->prepare("SELECT id, username FROM users WHERE email = ? AND deleted_at IS NULL");
-        $stmt->execute([$email]);
+        $stmt = $db->prepare("SELECT id, username FROM users WHERE LOWER(username) = LOWER(?) AND deleted_at IS NULL");
+        $stmt->execute([$username]);
         $user = $stmt->fetch();
-        
+
         if (!$user) {
-            // Non rivelare se email esiste o meno (security by obscurity)
-            return ['success' => true, 'message' => 'Se l\'email è registrata, riceverai le istruzioni'];
+            // Non rivelare se username esiste o meno (security by obscurity)
+            return ['success' => true, 'message' => 'Se l\'utente è registrato, riceverai le istruzioni'];
         }
-        
+
         // Genera token
         $token = bin2hex(random_bytes(32));
         $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        
+
         $stmt = $db->prepare("
-            UPDATE users 
+            UPDATE users
             SET password_reset_token = ?, password_reset_expires = ?
             WHERE id = ?
         ");
         $stmt->execute([$token, $expires, $user['id']]);
-        
-        audit_log('password_reset_requested', 'user', $user['id'], ['email' => $email]);
-        
+
+        audit_log('password_reset_requested', 'user', $user['id'], ['username' => $user['username']]);
+
         // In produzione: inviare email con link
         // Per ora, ritorniamo il token (solo sviluppo)
         return [
@@ -246,7 +241,7 @@ function generate_password_reset_token(string $email): array {
             'username' => $user['username'],
             'message' => 'Token generato (in produzione verrà inviata un\'email)'
         ];
-        
+
     } catch (PDOException $e) {
         error_log("Reset token error: " . $e->getMessage());
         return ['success' => false, 'error' => 'Errore di sistema'];
@@ -403,6 +398,46 @@ function delete_user(int $userId): array {
 
     } catch (PDOException $e) {
         error_log("Delete user error: " . $e->getMessage());
+        return ['success' => false, 'error' => 'Errore di sistema'];
+    }
+}
+
+/**
+ * Ripristina utente eliminato (soft delete restore)
+ *
+ * @param int $userId ID utente da ripristinare
+ * @return array ['success' => bool, 'error' => ?string]
+ */
+function restore_user(int $userId): array {
+    $db = db();
+
+    try {
+        // Verifica utente esistente ed eliminato
+        $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ? AND deleted_at IS NOT NULL");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            return ['success' => false, 'error' => 'Utente non trovato o non eliminato'];
+        }
+
+        // Verifica che lo username non sia già in uso da un utente attivo
+        $stmt = $db->prepare("SELECT id FROM users WHERE username = ? AND deleted_at IS NULL AND id != ?");
+        $stmt->execute([$user['username'], $userId]);
+        if ($stmt->fetch()) {
+            return ['success' => false, 'error' => 'Username già in uso da un altro utente attivo'];
+        }
+
+        // Ripristina utente
+        $stmt = $db->prepare("UPDATE users SET deleted_at = NULL WHERE id = ?");
+        $stmt->execute([$userId]);
+
+        audit_log('user_restored', 'user', $userId, ['username' => $user['username']]);
+
+        return ['success' => true];
+
+    } catch (PDOException $e) {
+        error_log("Restore user error: " . $e->getMessage());
         return ['success' => false, 'error' => 'Errore di sistema'];
     }
 }

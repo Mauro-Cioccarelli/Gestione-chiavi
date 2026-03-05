@@ -16,23 +16,31 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 require_csrf($_POST['csrf_token'] ?? null);
 
-$email = sanitize_email($_POST['email'] ?? '');
+$username = sanitize_string($_POST['username'] ?? '');
 
-if (!is_valid_email($email)) {
+if (empty($username)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Email non valida']);
+    echo json_encode(['error' => 'Username non valido']);
     exit;
 }
 
 // Genera token
-$result = generate_password_reset_token($email);
+$result = generate_password_reset_token($username);
 
 if ($result['success']) {
     // Se è stato generato un token, invia email
     if (isset($result['token']) && isset($result['username'])) {
         $resetLink = APP_URL . '/utenti/recupera-password.php?token=' . $result['token'];
-        
-        $emailBody = '
+
+        // Recupera email dell'utente per inviare email
+        $db = db();
+        $stmt = $db->prepare("SELECT email FROM users WHERE username = ?");
+        $stmt->execute([$result['username']]);
+        $userData = $stmt->fetch();
+        $email = $userData['email'] ?? '';
+
+        if (!empty($email)) {
+            $emailBody = '
         <!DOCTYPE html>
         <html>
         <head>
@@ -71,12 +79,13 @@ if ($result['success']) {
         </html>
         ';
 
-        send_email($email, 'Reset Password - ' . APP_NAME, $emailBody);
+            send_email($email, 'Reset Password - ' . APP_NAME, $emailBody);
+        }
     }
 
     echo json_encode([
         'success' => true,
-        'message' => 'Se l\'email è registrata, riceverai le istruzioni per il reset'
+        'message' => 'Se l\'utente è registrato, riceverai le istruzioni per il reset'
     ]);
 } else {
     http_response_code(500);

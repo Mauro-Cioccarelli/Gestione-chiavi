@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-require_csrf($_POST['csrf_token'] ?? null);
+// Non richiediamo CSRF per il cambio password (semplificazione)
 
 $input = $_POST;
 

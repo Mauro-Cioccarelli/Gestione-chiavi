@@ -6,20 +6,22 @@
 define('APP_ROOT', true);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
-require_admin();
+// Accesso consentito a operator e superiori
+require_role(ROLE_OPERATOR);
+
 header('Content-Type: application/json');
 
 $db = db();
 
-// Gli admin non-god non possono vedere gli utenti god
-$where = "deleted_at IS NULL";
+// Filtro per utenti god
+$where = "1=1";
 $params = [];
 
 if (!has_role(ROLE_GOD)) {
     $where .= " AND role != 'god'";
 }
 
-// Query base: prendi tutti gli utenti non eliminati
+// Query base: prendi tutti gli utenti (anche eliminati)
 $sql = "
     SELECT
         id,
@@ -28,10 +30,11 @@ $sql = "
         role,
         force_password_change,
         last_login,
-        created_at
+        created_at,
+        deleted_at
     FROM users
     WHERE $where
-    ORDER BY username ASC
+    ORDER BY deleted_at DESC, username ASC
 ";
 
 $stmt = $db->prepare($sql);

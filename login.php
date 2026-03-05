@@ -89,47 +89,47 @@ $rememberedUsername = $_COOKIE['remember_username'] ?? '';
             min-height: 100vh;
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e8f4f8 0%, #f5f7fa 100%);
         }
-        
+
         .login-card {
             max-width: 420px;
             margin: auto;
             border-radius: 1rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
-        
+
         .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5a8de8 0%, #7c6fd9 100%);
             color: white;
             padding: 2rem;
             text-align: center;
         }
-        
+
         .login-header i {
             font-size: 3rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .login-body {
             padding: 2rem;
             background: white;
         }
-        
+
         .form-control:focus,
         .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #5a8de8;
+            box-shadow: 0 0 0 0.2rem rgba(90, 141, 232, 0.25);
         }
-        
+
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5a8de8 0%, #7c6fd9 100%);
             border: none;
             padding: 0.75rem;
             font-weight: 600;
         }
-        
+
         .btn-login:hover {
             opacity: 0.9;
         }
