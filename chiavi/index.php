@@ -9,7 +9,12 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_login();
 
 $pageTitle = 'Inventario Chiavi';
-$extraJs = ['/assets/js/chiavi.js'];
+$extraJs = [
+    '/assets/js/voice/voice-core.js',
+    '/assets/js/voice/voice-parser.js',
+    '/assets/js/voice/voice-actions.js',
+    '/assets/js/chiavi.js'
+];
 
 // Ottieni categorie per select
 $db = db();
@@ -57,9 +62,22 @@ include __DIR__ . '/../includes/layout/header.php';
                             </select>
                         </div>
                         <div class="col-md-3 text-end">
+                            <button class="btn btn-outline-primary me-2" id="btn-voice-command" title="Comandi vocali">
+                                <i class="bi bi-mic-fill me-1"></i> Voce
+                            </button>
                             <button class="btn btn-outline-secondary" id="btn-refresh" title="Aggiorna">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Stato riconoscimento vocale -->
+                    <div class="mb-3" id="voice-status-container">
+                        <div id="voice-status" class="alert alert-light py-2 mb-2" role="status">
+                            Comandi vocali disponibili: "consegna chiave a [nome]", "rientro chiave", "annulla".
+                        </div>
+                        <div id="voice-recognized" class="small text-muted d-none">
+                            Testo riconosciuto: <span id="voice-recognized-text"></span>
                         </div>
                     </div>
 
@@ -196,5 +214,69 @@ include __DIR__ . '/../includes/layout/header.php';
 <?php 
 // Imposta ruolo utente per JS
 echo "<script>window.USER_ROLE = '" . (current_role() ?? '') . "';</script>";
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const voiceButton = document.getElementById('btn-voice-command');
+    const statusBox = document.getElementById('voice-status');
+    const recognizedWrapper = document.getElementById('voice-recognized');
+    const recognizedText = document.getElementById('voice-recognized-text');
+
+    if (!voiceButton || !statusBox || !window.VoiceCore || !window.parseVoiceCommand || !window.executeVoiceCommand) {
+        return;
+    }
+
+    function updateStatus(message, tone) {
+        statusBox.textContent = message;
+        statusBox.className = 'alert py-2 mb-2';
+        statusBox.classList.add(tone || 'alert-light');
+    }
+
+    const voice = new window.VoiceCore({
+        lang: 'it-IT',
+        onStart: function () {
+            voiceButton.classList.remove('btn-outline-primary');
+            voiceButton.classList.add('btn-danger');
+            updateStatus('Sto ascoltando...', 'alert-danger');
+        },
+        onEnd: function () {
+            voiceButton.classList.remove('btn-danger');
+            voiceButton.classList.add('btn-outline-primary');
+        },
+        onResult: function (text) {
+            recognizedText.textContent = text;
+            recognizedWrapper.classList.remove('d-none');
+            updateStatus('Comando ricevuto: elaborazione in corso...', 'alert-info');
+
+            const command = window.parseVoiceCommand(text);
+            if (!command) {
+                updateStatus('Comando non riconosciuto. Prova con: consegna chiave a [nome], rientro chiave, annulla.', 'alert-warning');
+                console.warn('[voice] Comando non riconosciuto:', text);
+                return;
+            }
+
+            console.log('[voice] command:', command);
+            updateStatus('Comando riconosciuto: ' + command.action, 'alert-success');
+            window.executeVoiceCommand(command);
+        },
+        onError: function (errorType, message) {
+            updateStatus(message, 'alert-warning');
+            console.warn('[voice] error:', errorType, message);
+        },
+        onUnsupported: function () {
+            voiceButton.disabled = true;
+            updateStatus('Riconoscimento vocale non supportato da questo browser.', 'alert-secondary');
+        }
+    });
+
+    voiceButton.addEventListener('click', function () {
+        const started = voice.start();
+        if (!started && !voice.isListening()) {
+            updateStatus('Impossibile avviare il riconoscimento vocale.', 'alert-warning');
+        }
+    });
+});
+</script>
+<?php
 include __DIR__ . '/../includes/layout/footer.php'; 
 ?>
