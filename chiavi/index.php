@@ -197,6 +197,11 @@ include __DIR__ . '/../includes/layout/header.php';
                     <input type="hidden" name="key_id" id="checkin-key-id">
                     
                     <div class="mb-3">
+                        <label class="form-label">Categoria</label>
+                        <input type="text" class="form-control" id="checkin-category-name" readonly>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Chiave</label>
                         <input type="text" class="form-control" id="checkin-key-name" readonly>
                     </div>

@@ -155,7 +155,7 @@
                     if (rows.length === 1) {
                         var key = rows[0];
                         if (typeof openCheckin === 'function') {
-                            openCheckin(key.id, key.identifier);
+                            openCheckin(key.id, key.identifier, key.category_name);
                         }
                     } else {
                         console.log('[voice] checkin: ' + rows.length + ' risultati, fallback su ricerca tabella');

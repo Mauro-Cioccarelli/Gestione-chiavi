@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i class="bi bi-box-arrow-up"></i>
                                  </button>`;
                     } else if (data.status === 'in_delivery') {
-                        html += `<button class="btn btn-sm btn-success me-1" 
-                                    onclick="openCheckin(${data.id}, '${escapeHtml(data.identifier)}')"
+                        html += `<button class="btn btn-sm btn-success me-1"
+                                    onclick="openCheckin(${data.id}, '${escapeHtml(data.identifier)}', '${escapeHtml(data.category_name || '')}')"
                                     title="Rientro">
                                     <i class="bi bi-box-arrow-in-down"></i>
                                  </button>`;
@@ -372,9 +372,11 @@ function openCheckout(keyId, keyName, categoryName) {
 /**
  * Apre modal rientro
  */
-function openCheckin(keyId, keyName) {
+function openCheckin(keyId, keyName, categoryName) {
     document.getElementById('checkin-key-id').value = keyId;
     document.getElementById('checkin-key-name').value = keyName;
+    const catField = document.getElementById('checkin-category-name');
+    if (catField) catField.value = categoryName || '';
     new bootstrap.Modal(document.getElementById('modalCheckin')).show();
 }
 
