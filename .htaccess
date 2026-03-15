@@ -2,11 +2,6 @@
 # .htaccess principale - Gestione Chiavi
 # ============================================================================
 
-# Abilita RewriteEngine
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-</IfModule>
-
 # Index default
 DirectoryIndex login.php
 
@@ -14,34 +9,3 @@ DirectoryIndex login.php
 <IfModule mod_autoindex.c>
     Options -Indexes
 </IfModule>
-
-# Blocca accesso a file sensibili
-<FilesMatch "\.(sql|log|ini|sh|bak)$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        <IfModule mod_authz_host.c>
-            Order deny,allow
-            Deny from all
-        </IfModule>
-    </IfModule>
-</FilesMatch>
-
-# Security headers (solo se modulo disponibile)
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
-
-    # HSTS per HTTPS
-    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-</IfModule>
-
-# Error pages personalizzate
-<IfModule mod_mime.c>
-    AddType text/html .php
-</IfModule>
-ErrorDocument 403 /error/403.php
-ErrorDocument 404 /error/404.php
-ErrorDocument 500 /error/500.php
