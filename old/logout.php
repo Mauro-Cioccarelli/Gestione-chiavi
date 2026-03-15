@@ -1,9 +1,0 @@
-<?php
-require_once("Connections/iconn.php");
-require_once("guard.php");
-session_unset();
-session_destroy();
-setcookie("AGNauth","",time()-3600,"/");
-header("location:login.php");
-die;
-?>
