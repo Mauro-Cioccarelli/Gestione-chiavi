@@ -40,8 +40,8 @@ define('APP_URL', ''); // Viene sovrascritto da config.local.php se esiste
 // Database
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'chiavi');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_USER', 'agenzi43');
+define('DB_PASS', '00054266');
 define('DB_CHARSET', 'utf8mb4');
 
 // Applicazione
