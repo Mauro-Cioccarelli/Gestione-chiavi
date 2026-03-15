@@ -11,7 +11,9 @@
 DirectoryIndex login.php
 
 # Disabilita directory listing
-Options -Indexes
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
 
 # Blocca accesso a file sensibili
 <FilesMatch "\.(sql|log|ini|sh|bak)$">
@@ -19,8 +21,10 @@ Options -Indexes
         Require all denied
     </IfModule>
     <IfModule !mod_authz_core.c>
-        Order deny,allow
-        Deny from all
+        <IfModule mod_authz_host.c>
+            Order deny,allow
+            Deny from all
+        </IfModule>
     </IfModule>
 </FilesMatch>
 
@@ -29,12 +33,15 @@ Options -Indexes
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
-    
+
     # HSTS per HTTPS
     Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
 # Error pages personalizzate
+<IfModule mod_mime.c>
+    AddType text/html .php
+</IfModule>
 ErrorDocument 403 /error/403.php
 ErrorDocument 404 /error/404.php
 ErrorDocument 500 /error/500.php
