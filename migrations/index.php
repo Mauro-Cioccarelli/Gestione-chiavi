@@ -57,7 +57,7 @@ foreach ($availableMigrations as $file) {
 // Verifica connessione a database legacy
 try {
     // Prova a connettersi al database legacy (stesse credenziali, DB diverso)
-    $legacyDbName = 'agenzi43_old';
+    $legacyDbName = 'chiavi_old';
     $db->exec("USE `$legacyDbName`");
     $legacyConnected = true;
     
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'migrate_data' && isset($_POST['confirm'])) {
         try {
             // Migrazione dati da legacy
-            $legacyDb = 'agenzi43_old';
+            $legacyDb = 'chiavi_old';
             $mainDb = DB_NAME;
 
             // Disabilita strict mode per gestire date '0000-00-00 00:00:00'
@@ -468,7 +468,7 @@ include __DIR__ . '/../includes/layout/header.php';
                 <div class="card-body">
                     <?php if ($legacyConnected): ?>
                         <p class="text-muted">
-                            Database legacy trovato: <strong>agenzi43_old</strong><br>
+                            Database legacy trovato: <strong>chiavi_old</strong><br>
                             Tabelle disponibili: <?= implode(', ', $legacyTables) ?>
                         </p>
                         
@@ -483,7 +483,7 @@ include __DIR__ . '/../includes/layout/header.php';
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="confirm_legacy" name="confirm" required>
                                 <label class="form-check-label" for="confirm_legacy">
-                                    Confermo migrazione dati da agenzi43_old
+                                    Confermo migrazione dati da chiavi_old
                                 </label>
                             </div>
                             <button type="submit" class="btn btn-warning">
@@ -492,7 +492,7 @@ include __DIR__ . '/../includes/layout/header.php';
                         </form>
                     <?php else: ?>
                         <p class="text-muted">
-                            Il database legacy <strong>agenzi43_old</strong> non è stato trovato o non è accessibile.<br>
+                            Il database legacy <strong>chiavi_old</strong> non è stato trovato o non è accessibile.<br>
                             Per migrare i dati, assicurati che il database legacy esista sullo stesso server.
                         </p>
                     <?php endif; ?>

@@ -147,7 +147,7 @@ Il sistema supporta il riconoscimento vocale per eseguire operazioni rapide:
 - ✅ Prepared statements (SQL injection safe)
 
 ### Migrazione da Legacy
-- ✅ Script migrazione automatico da `agenzi43_old`
+- ✅ Script migrazione automatico da `chiavi_old`
 - ✅ Import utenti, categorie, chiavi, movimenti
 - ✅ Migrazione password MD5 → bcrypt (al primo login)
 
@@ -225,7 +225,7 @@ Controlla i log errori di PHP e Apache.
 Assicurati che i cookie siano abilitati nel browser.
 
 ### Migrazione legacy fallita
-Verifica che il database `agenzi43_old` esista e sia accessibile.
+Verifica che il database `chiavi_old` esista e sia accessibile.
 
 ## Licenza
 
