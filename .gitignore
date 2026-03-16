@@ -3,9 +3,9 @@
 # File installati
 .installed
 
-# Configurazione locale (solo root)
-/config.local.php
-/config.php
+# File di configurazione (mai tracciare)
+includes/config.php
+includes/config.local.php
 
 # Log
 logs/
