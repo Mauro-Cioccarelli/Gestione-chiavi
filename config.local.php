@@ -7,6 +7,14 @@
  */
 
 // =============================================================================
+// APPLICAZIONE
+// =============================================================================
+
+defined('APP_NAME') || define('APP_NAME', 'Gestione Chiavi');
+defined('APP_VERSION') || define('APP_VERSION', '2.0.0');
+defined('APP_DEBUG') || define('APP_DEBUG', true);
+
+// =============================================================================
 // DATABASE
 // =============================================================================
 
@@ -21,7 +29,7 @@ defined('DB_CHARSET') || define('DB_CHARSET', 'utf8mb4');
 // =============================================================================
 
 defined('APP_URL') || define('APP_URL', 'http://chiavi.test');
-defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__));
+defined('BASE_PATH') || define('BASE_PATH', __DIR__);
 
 // =============================================================================
 // SESSIONE E SICUREZZA

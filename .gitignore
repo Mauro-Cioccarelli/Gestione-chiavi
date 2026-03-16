@@ -5,7 +5,7 @@
 
 # File di configurazione (mai tracciare)
 includes/config.php
-includes/config.local.php
+config.local.php
 
 # Log
 logs/
