@@ -73,11 +73,14 @@ include __DIR__ . '/../includes/layout/header.php';
                         </div>
                     </div>
 
-                    <!-- Stato riconoscimento vocale -->
+                    <!-- Legenda comandi vocali (sempre visibile) -->
+                    <div class="mb-2 small text-muted">
+                        <i class="bi bi-mic me-1"></i>Comandi vocali: "cerca [termine]" · "consegna [chiave] a [nome]" · "consegna chiave [chiave]" · "rientro [chiave]" · "annulla"
+                    </div>
+
+                    <!-- Stato riconoscimento vocale (visibile solo durante attività) -->
                     <div class="mb-3" id="voice-status-container">
-                        <div id="voice-status" class="alert alert-light py-2 mb-2" role="status">
-                            Comandi vocali: "cerca [termine]" · "consegna [chiave] a [nome]" · "consegna chiave [chiave]" · "rientro [chiave]" · "annulla"
-                        </div>
+                        <div id="voice-status" class="alert py-2 mb-2 d-none" role="status"></div>
                         <div id="voice-recognized" class="small text-muted d-none">
                             Testo riconosciuto: <span id="voice-recognized-text"></span>
                         </div>
@@ -285,6 +288,13 @@ document.addEventListener('DOMContentLoaded', function () {
         statusBox.textContent = message;
         statusBox.className = 'alert py-2 mb-2';
         statusBox.classList.add(tone || 'alert-light');
+        statusBox.classList.remove('d-none');
+    }
+
+    function clearStatus() {
+        statusBox.classList.add('d-none');
+        statusBox.textContent = '';
+        recognizedWrapper.classList.add('d-none');
     }
 
     const voice = new window.VoiceCore({
@@ -297,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
         onEnd: function () {
             voiceButton.classList.remove('btn-danger');
             voiceButton.classList.add('btn-outline-primary');
+            setTimeout(clearStatus, 10000);
         },
         onResult: function (text) {
             recognizedText.textContent = text;

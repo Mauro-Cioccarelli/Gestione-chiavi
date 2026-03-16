@@ -16,11 +16,7 @@ if (!defined('APP_ROOT')) {
 }
 
 // Carica configurazione
-if (file_exists(__DIR__ . '/config.php')) {
-    require_once __DIR__ . '/config.php';
-} else {
-    require_once __DIR__ . '/../config.local.php';
-}
+require_once __DIR__ . '/config.php';
 
 // Carica dipendenze base
 require_once __DIR__ . '/db.php';

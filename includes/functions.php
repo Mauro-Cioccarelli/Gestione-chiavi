@@ -9,18 +9,6 @@ if (!defined('APP_ROOT')) {
     exit('Accesso diretto non consentito');
 }
 
-// Costanti stato chiavi
-define('KEY_AVAILABLE',   'available');
-define('KEY_IN_DELIVERY', 'in_delivery');
-define('KEY_DISMISED',    'dismised');
-
-/**
- * Verifica se l'applicazione è installata (esiste il file .installed)
- */
-function is_installed(): bool {
-    return file_exists(BASE_PATH . '/.installed');
-}
-
 /**
  * Redirect sicuro
  */
