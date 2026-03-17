@@ -7,7 +7,7 @@
  *   - "cerca [termine]"                    => { action: 'search', target, field: 'all' }
  *   - "cerca chiave [termine]"             => { action: 'search', target, field: 'chiave' }
  *   - "cerca categoria [termine]"          => { action: 'search', target, field: 'categoria' }
- *   - "consegna [chiave] a [nome]"         => { action: 'checkout_voice', query, recipient }
+ *   - "consegna [chiave] a/ad [nome]"       => { action: 'checkout_voice', query, recipient }
  *   - "rientro [chiave]"                   => { action: 'checkin_voice', query }
  *   - "rientro" / "rientro chiave"         => { action: 'checkin_voice', query: null }
  *   - "annulla"                            => { action: 'cancel', target: null }
@@ -54,9 +54,9 @@
             };
         }
 
-        // consegna [chiave] [query] a [nome] — con destinatario, "chiave" opzionale
-        // Match greedy: l'ultima occorrenza di " a " è il separatore verso il destinatario.
-        var checkoutVoiceMatch = normalized.match(/^consegna(?:\s+chiave)?\s+(.+)\s+a\s+(.+)$/i);
+        // consegna [chiave] [query] a/ad [nome] — con destinatario, "chiave" opzionale
+        // Match greedy: l'ultima occorrenza di " a " o " ad " è il separatore verso il destinatario.
+        var checkoutVoiceMatch = normalized.match(/^consegna(?:\s+chiave)?\s+(.+)\s+ad?\s+(.+)$/i);
         if (checkoutVoiceMatch) {
             return {
                 action: 'checkout_voice',

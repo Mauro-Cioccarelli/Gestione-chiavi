@@ -67,6 +67,7 @@ try {
             'existing_id' => $existingActive['id'],
             'existing_type' => 'active'
         ]);
+        exit;
     }
 
     // 2. Controllo se esiste una chiave DISMESSA
@@ -80,6 +81,7 @@ try {
 
     if ($existingDeleted) {
         // Chiave dismessa esistente - chiedi conferma
+        // Non faccio rollback qui perché servirà per il ripristino
         $db->rollBack();
         http_response_code(409); // 409 Conflict - serve azione utente
         echo json_encode([
@@ -89,6 +91,7 @@ try {
             'existing_id' => $existingDeleted['id'],
             'existing_type' => 'deleted'
         ]);
+        exit;
     }
 
     // 3. Nessuna chiave esistente - creo nuova

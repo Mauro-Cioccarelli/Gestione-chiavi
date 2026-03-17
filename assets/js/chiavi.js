@@ -2,6 +2,9 @@
  * Gestione Chiavi - JavaScript
  */
 
+// Riferimento alla tabella (accessibile globalmente)
+window.keysTable = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     const tableElement = document.getElementById('keys-table');
 
@@ -18,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
         layout: "fitColumns",
         paginationSize: 20,
         paginationSizeSelector: [10, 20, 50, 100],
+        dataLoaded: function() {
+            window.keysTable = table;
+        },
         columns: [
             {
                 title: "ID",
@@ -219,13 +225,22 @@ document.addEventListener('DOMContentLoaded', function () {
         formNewKey.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
+            
+            // Assicura che il token CSRF sia presente
+            if (!formData.has('csrf_token') && window.CSRF_TOKEN) {
+                formData.append('csrf_token', window.CSRF_TOKEN);
+            }
 
             showLoading();
 
-            fetchJSON(window.APP_URL + '/ajax/chiavi/create.php', {
+            fetch(window.APP_URL + '/ajax/chiavi/create.php', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
+                .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         bootstrap.Modal.getInstance(document.getElementById('modalNewKey')).hide();
@@ -252,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     if (restoreResult.success) {
                                         bootstrap.Modal.getInstance(document.getElementById('modalNewKey')).hide();
                                         table.replaceData();
-                                        showAlert('warning', '<i class="bi bi-arrow-clockwise me-2"></i>' + restoreResult.message);
+                                        showAlert('warning', '<i class="bi bi-arrow-clockwise me-2"></i>' + restoreResult.message, 5000, true);
                                         formNewKey.reset();
                                     } else {
                                         showAlert('danger', restoreResult.error);
@@ -272,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         // Se la chiave esiste già (attiva), mostro il link per andare alla scheda
                         if (data.existing_id && data.existing_type === 'active') {
-                            showAlert('info', 'La chiave esiste già. <a href="' + window.APP_URL + '/chiavi/storia.php?id=' + data.existing_id + '" class="alert-link">Vai alla scheda</a>');
+                            showAlert('info', 'La chiave esiste già. <a href="' + window.APP_URL + '/chiavi/storia.php?id=' + data.existing_id + '" class="alert-link">Vai alla scheda</a>', 5000, true);
                         } else {
                             showAlert('danger', data.error);
                         }
@@ -437,6 +452,87 @@ function editKey(keyId, categoryName, identifier) {
         })
         .catch(err => {
             showAlert('danger', 'Errore nel caricamento dei dati: ' + err.message);
+        });
+}
+
+/**
+ * Elimina chiave (soft delete)
+ */
+function deleteKey(keyId, identifier) {
+    if (!confirm(`Sei sicuro di voler eliminare la chiave "${identifier}"?\n\nQuesta operazione è reversibile.`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('csrf_token', window.CSRF_TOKEN);
+    formData.append('id', keyId);
+
+    showLoading();
+
+    fetchJSON(window.APP_URL + '/ajax/chiavi/delete.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(data => {
+            if (data.success) {
+                if (window.keysTable) {
+                    window.keysTable.replaceData();
+                }
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error);
+            }
+        })
+        .catch(err => {
+            showAlert('danger', 'Errore di comunicazione: ' + err.message);
+        })
+        .finally(() => {
+            hideLoading();
+        });
+}
+
+/**
+ * Elimina chiave dal modal di modifica
+ */
+function deleteKeyFromModal() {
+    const keyId = document.getElementById('edit-key-id')?.value;
+    const identifier = document.getElementById('edit-identifier')?.value;
+
+    if (!keyId) {
+        showAlert('danger', 'ID chiave non valido');
+        return;
+    }
+
+    if (!confirm(`Sei sicuro di voler eliminare la chiave "${identifier}"?\n\nQuesta operazione è reversibile.`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('csrf_token', window.CSRF_TOKEN);
+    formData.append('id', keyId);
+
+    showLoading();
+
+    fetchJSON(window.APP_URL + '/ajax/chiavi/delete.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalEditKey')).hide();
+                if (window.keysTable) {
+                    window.keysTable.replaceData();
+                }
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error);
+            }
+        })
+        .catch(err => {
+            showAlert('danger', 'Errore di comunicazione: ' + err.message);
+        })
+        .finally(() => {
+            hideLoading();
         });
 }
 

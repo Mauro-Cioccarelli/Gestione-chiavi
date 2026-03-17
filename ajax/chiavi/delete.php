@@ -4,6 +4,12 @@
  */
 
 define('APP_ROOT', true);
+
+// Pulisce qualsiasi output precedente
+while (ob_get_level()) {
+    ob_end_clean();
+}
+
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 require_login();
@@ -33,7 +39,7 @@ if (!$validator->validate()) {
 $keyId = (int)$input['id'];
 
 // Verifica chiave esistente
-$stmt = $db->prepare("SELECT id, identifier FROM keys WHERE id = ? AND deleted_at IS NULL");
+$stmt = $db->prepare("SELECT id, identifier FROM `keys` WHERE id = ? AND deleted_at IS NULL");
 $stmt->execute([$keyId]);
 $key = $stmt->fetch();
 
@@ -44,7 +50,7 @@ if (!$key) {
 }
 
 // Verifica che la chiave sia disponibile (non in consegna)
-$stmt = $db->prepare("SELECT status FROM keys WHERE id = ?");
+$stmt = $db->prepare("SELECT status FROM `keys` WHERE id = ?");
 $stmt->execute([$keyId]);
 $status = $stmt->fetch()['status'];
 
@@ -56,9 +62,9 @@ if ($status === KEY_IN_DELIVERY) {
 
 try {
     $db->beginTransaction();
-    
+
     // Soft delete
-    $stmt = $db->prepare("UPDATE keys SET deleted_at = NOW() WHERE id = ?");
+    $stmt = $db->prepare("UPDATE `keys` SET deleted_at = NOW() WHERE id = ?");
     $stmt->execute([$keyId]);
     
     // Log movimento

@@ -9,19 +9,19 @@
 /**
  * Mostra alert
  */
-function showAlert(type, message, duration = 5000) {
+function showAlert(type, message, duration = 5000, allowHtml = false) {
     const container = document.querySelector('.main-content') || document.body;
-    
+
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show flash-message`;
     alert.innerHTML = `
         <i class="bi bi-${getAlertIcon(type)} me-2"></i>
-        ${escapeHtml(message)}
+        ${allowHtml ? message : escapeHtml(message)}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
+
     container.insertBefore(alert, container.firstChild);
-    
+
     // Auto-dismiss
     if (duration > 0) {
         setTimeout(() => {

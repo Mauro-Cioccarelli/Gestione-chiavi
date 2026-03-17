@@ -259,6 +259,13 @@ include __DIR__ . '/../includes/layout/header.php';
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <?php if (has_role(ROLE_ADMIN) || has_role(ROLE_GOD)): ?>
+                        <button type="button" class="btn btn-danger me-auto"
+                                onclick="deleteKeyFromModal()"
+                                title="Elimina chiave">
+                            <i class="bi bi-trash me-1"></i>Elimina
+                        </button>
+                    <?php endif; ?>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg me-1"></i>Salva modifiche
@@ -335,7 +342,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function resetFilters() {
+        const searchInput = document.getElementById('search-input');
+        const statusFilter = document.getElementById('status-filter');
+        if (searchInput) searchInput.value = '';
+        if (statusFilter) statusFilter.value = '';
+        if (statusFilter) {
+            statusFilter.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (searchInput) {
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
     function triggerVoice() {
+        resetFilters();
         const started = voice.start();
         if (!started && !voice.isListening()) {
             updateStatus('Impossibile avviare il riconoscimento vocale.', 'alert-warning');
