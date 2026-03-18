@@ -30,7 +30,7 @@ $result = generate_password_reset_token($username);
 if ($result['success']) {
     // Se è stato generato un token, invia email
     if (isset($result['token']) && isset($result['username'])) {
-        $resetLink = APP_URL . '/utenti/recupera-password.php?token=' . $result['token'];
+        $resetLink = APP_URL . '/utenti/reset-password-confirm.php?token=' . $result['token'];
 
         // Recupera email dell'utente per inviare email
         $db = db();

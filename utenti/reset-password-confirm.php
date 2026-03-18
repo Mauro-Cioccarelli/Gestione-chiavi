@@ -33,7 +33,7 @@ $tokenValid = !empty($token);
     <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
 
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/bootstrap-icons.min.css">
 
     <style>
         body {
@@ -186,6 +186,11 @@ $tokenValid = !empty($token);
     <!-- Bootstrap JS -->
     <script src="/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+        window.APP_URL = '';
+        window.CSRF_TOKEN = '<?= csrf_token() ?>';
+    </script>
+    <script src="/assets/js/main.js"></script>
     <script src="/assets/js/auth.js"></script>
 </body>
 </html>

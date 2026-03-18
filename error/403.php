@@ -19,7 +19,7 @@ http_response_code(403);
     <link rel="shortcut icon" href="/assets/images/favicon/favicon.ico">
 
     <link rel="stylesheet" href="/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.13.1/bootstrap-icons.min.css">
     <style>
         body {
             min-height: 100vh;
