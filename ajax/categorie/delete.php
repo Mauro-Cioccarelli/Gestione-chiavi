@@ -47,33 +47,47 @@ try {
     $category = $stmtName->fetch();
     $categoryName = $category ? $category['name'] : 'Sconosciuto';
 
-    // Controlla se esistono chiavi "attive" associate
-    // Cancellare è permesso SOLO se tutte le chiavi sono state dismesse ('deleted_at' non nullo)
-    $stmt = $db->prepare("SELECT COUNT(*) as active_count FROM `keys` WHERE category_id = ? AND deleted_at IS NULL");
-    $stmt->execute([$categoryId]);
-    $row = $stmt->fetch();
+    // Recupera gli ID delle chiavi attive da eliminare (prima del delete, per poter loggare i movimenti)
+    $stmtKeys = $db->prepare("SELECT id FROM `keys` WHERE category_id = ? AND deleted_at IS NULL");
+    $stmtKeys->execute([$categoryId]);
+    $keyIds = $stmtKeys->fetchAll(PDO::FETCH_COLUMN);
+    $activeKeysCount = count($keyIds);
 
-    if ($row && $row['active_count'] > 0) {
-        $db->rollBack();
-        http_response_code(400);
-        echo json_encode(['error' => 'Non è possibile eliminare la categoria. Sono presenti ancora ' . $row['active_count'] . ' chiavi collegate e non dismesse.']);
-        exit;
+    // Soft-delete tutte le chiavi attive associate alla categoria
+    if ($activeKeysCount > 0) {
+        $stmtDeleteKeys = $db->prepare("UPDATE `keys` SET deleted_at = NOW() WHERE category_id = ? AND deleted_at IS NULL");
+        $stmtDeleteKeys->execute([$categoryId]);
     }
 
-    // Marca come eliminata (soft delete)
+    // Soft-delete della categoria
     $stmtDelete = $db->prepare("UPDATE key_categories SET deleted_at = NOW() WHERE id = ?");
     $stmtDelete->execute([$categoryId]);
 
     $db->commit();
 
-    // Log audit
+    // Registra un movimento "dismessa" per ogni chiave eliminata
+    foreach ($keyIds as $keyId) {
+        log_key_movement((int)$keyId, 'dismise', null, null, "Eliminata insieme alla categoria \"{$categoryName}\"");
+    }
+
+    // Log audit con descrizione in italiano
+    $chiaveParola = $activeKeysCount === 1 ? 'chiave' : 'chiavi';
+    $messaggioAudit = $activeKeysCount > 0
+        ? "Categoria \"{$categoryName}\" eliminata con {$activeKeysCount} {$chiaveParola} associate."
+        : "Categoria \"{$categoryName}\" eliminata (nessuna chiave associata).";
+
     audit_log('category_deleted', 'category', $categoryId, [
-        'name' => $categoryName
-    ]);
+        'nome_categoria'   => $categoryName,
+        'chiavi_eliminate' => $activeKeysCount
+    ], $messaggioAudit);
+
+    $message = $activeKeysCount > 0
+        ? "Categoria eliminata con successo insieme a {$activeKeysCount} chiav" . ($activeKeysCount === 1 ? 'e' : 'i') . " associate."
+        : 'Categoria eliminata con successo.';
 
     echo json_encode([
         'success' => true,
-        'message' => 'Categoria eliminata con successo'
+        'message' => $message
     ]);
 
 } catch (Exception $e) {

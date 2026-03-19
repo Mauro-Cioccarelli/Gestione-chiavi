@@ -21,17 +21,18 @@ if ($keyId < 1) {
 
 $db = db();
 
-// Ottieni dati chiave
+// Ottieni dati chiave (incluse le chiavi dismesse, per mostrarne lo storico)
 $stmt = $db->prepare("
-    SELECT 
+    SELECT
         k.id,
         k.identifier,
         k.status,
+        k.deleted_at,
         kc.name as category_name,
         k.created_at
     FROM `keys` k
     LEFT JOIN key_categories kc ON k.category_id = kc.id
-    WHERE k.id = ? AND k.deleted_at IS NULL
+    WHERE k.id = ?
 ");
 $stmt->execute([$keyId]);
 $key = $stmt->fetch();
@@ -71,9 +72,12 @@ include __DIR__ . '/../includes/layout/header.php';
     <div class="row mb-4">
         <div class="col-md-8">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header <?= $key['deleted_at'] ? 'bg-danger' : 'bg-primary' ?> text-white">
                     <i class="bi bi-key-fill me-2"></i>
                     <?= htmlspecialchars($key['identifier']) ?>
+                    <?php if ($key['deleted_at']): ?>
+                        <span class="badge bg-white text-danger ms-2">Dismessa</span>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -111,14 +115,16 @@ include __DIR__ . '/../includes/layout/header.php';
                     <a href="index.php" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Torna all'inventario
                     </a>
-                    <?php if ($key['status'] === 'available'): ?>
-                        <button class="btn btn-warning btn-sm" onclick="openCheckout(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
-                            <i class="bi bi-box-arrow-up me-1"></i>Consegna
-                        </button>
-                    <?php elseif ($key['status'] === 'in_delivery'): ?>
-                        <button class="btn btn-success btn-sm" onclick="openCheckin(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
-                            <i class="bi bi-box-arrow-in-down me-1"></i>Rientro
-                        </button>
+                    <?php if (!$key['deleted_at']): ?>
+                        <?php if ($key['status'] === 'available'): ?>
+                            <button class="btn btn-warning btn-sm" onclick="openCheckout(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
+                                <i class="bi bi-box-arrow-up me-1"></i>Consegna
+                            </button>
+                        <?php elseif ($key['status'] === 'in_delivery'): ?>
+                            <button class="btn btn-success btn-sm" onclick="openCheckin(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
+                                <i class="bi bi-box-arrow-in-down me-1"></i>Rientro
+                            </button>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -132,21 +138,28 @@ include __DIR__ . '/../includes/layout/header.php';
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <?php if ($key['status'] === 'available'): ?>
-                            <button class="btn btn-warning" onclick="openCheckout(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
-                                <i class="bi bi-box-arrow-up me-2"></i>Consegna Chiave
-                            </button>
-                        <?php elseif ($key['status'] === 'in_delivery'): ?>
-                            <button class="btn btn-success" onclick="openCheckin(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
-                                <i class="bi bi-box-arrow-in-down me-2"></i>Registra Rientro
-                            </button>
-                        <?php endif; ?>
-                        
-                        <?php if (has_role(ROLE_ADMIN)): ?>
-                            <hr>
-                            <a href="modifica.php?id=<?= $key['id'] ?>" class="btn btn-outline-primary">
-                                <i class="bi bi-pencil me-2"></i>Modifica Chiave
-                            </a>
+                        <?php if ($key['deleted_at']): ?>
+                            <div class="text-center text-danger py-2">
+                                <i class="bi bi-trash fs-4"></i>
+                                <div class="small mt-1">Chiave dismessa</div>
+                            </div>
+                        <?php else: ?>
+                            <?php if ($key['status'] === 'available'): ?>
+                                <button class="btn btn-warning" onclick="openCheckout(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
+                                    <i class="bi bi-box-arrow-up me-2"></i>Consegna Chiave
+                                </button>
+                            <?php elseif ($key['status'] === 'in_delivery'): ?>
+                                <button class="btn btn-success" onclick="openCheckin(<?= $key['id'] ?>, '<?= htmlspecialchars($key['identifier']) ?>')">
+                                    <i class="bi bi-box-arrow-in-down me-2"></i>Registra Rientro
+                                </button>
+                            <?php endif; ?>
+
+                            <?php if (has_role(ROLE_ADMIN)): ?>
+                                <hr>
+                                <a href="modifica.php?id=<?= $key['id'] ?>" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil me-2"></i>Modifica Chiave
+                                </a>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>

@@ -86,18 +86,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="bi bi-pencil"></i>
                              </button>`;
 
-                    if (parseInt(data.keys_count) === 0) {
-                        html += `<button class="btn btn-sm btn-outline-danger"
-                                    onclick="deleteCategory(${data.id}, '${escapeHtml(data.name)}')"
-                                    title="Elimina">
-                                    <i class="bi bi-trash"></i>
-                                 </button>`;
-                    } else {
-                        html += `<button class="btn btn-sm btn-outline-danger disabled opacity-50 pe-none"
-                                    title="Impossibile eliminare, contiene chiavi">
-                                    <i class="bi bi-trash"></i>
-                                 </button>`;
-                    }
+                    html += `<button class="btn btn-sm btn-outline-danger"
+                                onclick="deleteCategory(${data.id}, '${escapeHtml(data.name)}', ${parseInt(data.keys_count)})"
+                                title="Elimina">
+                                <i class="bi bi-trash"></i>
+                             </button>`;
 
                     return html;
                 }
@@ -262,8 +255,11 @@ window.openEditCategory = function (id, name, description) {
     new bootstrap.Modal(document.getElementById('modalEditCategory')).show();
 };
 
-window.deleteCategory = function (id, name) {
-    if (confirm(`Sei sicuro di voler eliminare la categoria "${name}"? Questa azione non può essere annullata.`)) {
+window.deleteCategory = function (id, name, keysCount) {
+    const warningKeys = keysCount > 0
+        ? `\n\nATTENZIONE: questa categoria contiene ${keysCount} chiav${keysCount === 1 ? 'e' : 'i'} che verr${keysCount === 1 ? 'à' : 'anno'} eliminat${keysCount === 1 ? 'a' : 'e'} insieme alla categoria.`
+        : '';
+    if (confirm(`Sei sicuro di voler eliminare la categoria "${name}"?${warningKeys}\n\nQuesta azione non può essere annullata.`)) {
         showLoading();
         const formData = new FormData();
         formData.append('csrf_token', window.CSRF_TOKEN);
