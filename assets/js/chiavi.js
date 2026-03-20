@@ -218,6 +218,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyCustomFilters();
             });
         }
+
+        // BACKSPACE (fuori da input/select/textarea) = azzera ricerca
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Backspace') return;
+            const tag = document.activeElement ? document.activeElement.tagName : '';
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+            if (searchInput) searchInput.value = '';
+            if (statusFilter) statusFilter.value = '';
+            sessionStorage.removeItem(FILTER_STORAGE_KEY);
+            applyCustomFilters();
+        });
     });
 
     // Inizializza tooltip dopo il caricamento dei dati

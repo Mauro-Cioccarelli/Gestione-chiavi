@@ -122,30 +122,69 @@ document.addEventListener('DOMContentLoaded', function () {
         ]
     });
 
-    // Ricerca 
+    const FILTER_STORAGE_KEY = 'categorie_filters';
+
+    function saveFilters() {
+        const searchInput = document.getElementById('search-input');
+        sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({
+            search: searchInput ? searchInput.value : ''
+        }));
+    }
+
+    function applyCustomFilters() {
+        const searchInput = document.getElementById('search-input');
+        const val = searchInput ? searchInput.value : '';
+        saveFilters();
+        if (val) {
+            table.setFilter([{ field: "search", type: "like", value: val }]);
+        } else {
+            table.clearFilter();
+        }
+    }
+
+    // Ricerca
     table.on("tableBuilt", function () {
         let searchTimeout;
         const searchInput = document.getElementById('search-input');
+
+        // Ripristina filtri salvati
+        const saved = sessionStorage.getItem(FILTER_STORAGE_KEY);
+        if (saved) {
+            try {
+                const filters = JSON.parse(saved);
+                if (searchInput && filters.search) {
+                    searchInput.value = filters.search;
+                    applyCustomFilters();
+                }
+            } catch (e) { /* ignora dati corrotti */ }
+        }
+
         if (searchInput) {
             searchInput.addEventListener('input', function () {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    const val = this.value;
-                    if (val) {
-                        table.setFilter([{ field: "search", type: "like", value: val }]);
-                    } else {
-                        table.clearFilter();
-                    }
-                }, 500);
+                searchTimeout = setTimeout(() => applyCustomFilters(), 500);
             });
         }
+
+        // BACKSPACE (fuori da input/select/textarea) = azzera ricerca
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Backspace') return;
+            const tag = document.activeElement ? document.activeElement.tagName : '';
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+            if (searchInput) searchInput.value = '';
+            sessionStorage.removeItem(FILTER_STORAGE_KEY);
+            applyCustomFilters();
+        });
     });
 
     // Refresh
     const refreshBtn = document.getElementById('btn-refresh');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function () {
-            table.replaceData();
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
+            sessionStorage.removeItem(FILTER_STORAGE_KEY);
+            applyCustomFilters();
         });
     }
 
