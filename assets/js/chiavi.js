@@ -152,6 +152,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
+    const FILTER_STORAGE_KEY = 'chiavi_filters';
+
+    function saveFilters() {
+        const searchInput = document.getElementById('search-input');
+        const statusFilter = document.getElementById('status-filter');
+        sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({
+            search: searchInput ? searchInput.value : '',
+            status: statusFilter ? statusFilter.value : ''
+        }));
+    }
+
     function applyCustomFilters() {
         let customFilters = [];
 
@@ -165,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             customFilters.push({ field: "status", type: "=", value: statusFilter.value });
         }
 
+        saveFilters();
         table.setFilter(customFilters);
     }
 
@@ -172,6 +184,26 @@ document.addEventListener('DOMContentLoaded', function () {
     table.on("tableBuilt", function () {
         let searchTimeout;
         const searchInput = document.getElementById('search-input');
+        const statusFilter = document.getElementById('status-filter');
+
+        // Ripristina filtri salvati (URL param ha la precedenza)
+        const urlParams = new URLSearchParams(window.location.search);
+        const statusParam = urlParams.get('status');
+        if (statusParam && ['available', 'in_delivery', 'dismised'].includes(statusParam)) {
+            if (statusFilter) statusFilter.value = statusParam;
+            applyCustomFilters();
+        } else {
+            const saved = sessionStorage.getItem(FILTER_STORAGE_KEY);
+            if (saved) {
+                try {
+                    const filters = JSON.parse(saved);
+                    if (searchInput && filters.search) searchInput.value = filters.search;
+                    if (statusFilter && filters.status) statusFilter.value = filters.status;
+                    if (filters.search || filters.status) applyCustomFilters();
+                } catch (e) { /* ignora dati corrotti */ }
+            }
+        }
+
         if (searchInput) {
             searchInput.addEventListener('input', function () {
                 clearTimeout(searchTimeout);
@@ -181,19 +213,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        const statusFilter = document.getElementById('status-filter');
         if (statusFilter) {
             statusFilter.addEventListener('change', function () {
                 applyCustomFilters();
             });
-
-            // Check URL params per filtro stato
-            const urlParams = new URLSearchParams(window.location.search);
-            const statusParam = urlParams.get('status');
-            if (statusParam && ['available', 'in_delivery', 'dismised'].includes(statusParam)) {
-                statusFilter.value = statusParam;
-                applyCustomFilters();
-            }
         }
     });
 
@@ -205,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Refresh: pulisce i filtri e ricarica
+    // Refresh: pulisce i filtri, la sessione e ricarica
     const refreshBtn = document.getElementById('btn-refresh');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function () {
@@ -213,6 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (searchInput) searchInput.value = '';
             const statusFilter = document.getElementById('status-filter');
             if (statusFilter) statusFilter.value = '';
+            sessionStorage.removeItem(FILTER_STORAGE_KEY);
             applyCustomFilters();
         });
     }
