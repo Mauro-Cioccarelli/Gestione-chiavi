@@ -50,13 +50,24 @@ try {
     $stmtOld->execute([$id]);
     $oldData = $stmtOld->fetch();
     
-    // Controllo che non esista un'altra con lo stesso nome
+    // Controllo che non esista un'altra con lo stesso nome (tra quelle attive)
     $stmt = $db->prepare("SELECT id FROM key_categories WHERE LOWER(name) = LOWER(?) AND id != ? AND deleted_at IS NULL");
     $stmt->execute([$name, $id]);
     if ($stmt->fetch()) {
         http_response_code(400);
         echo json_encode(['error' => 'Esiste già un\'altra Categoria in uso con questo nome.']);
         exit;
+    }
+
+    // Se esiste una categoria eliminata con lo stesso nome, rinominala per evitare che
+    // create.php la ripristini in futuro creando un duplicato attivo con lo stesso nome.
+    // Le chiavi associate alla categoria eliminata rimangono eliminate.
+    $stmtDeleted = $db->prepare("SELECT id FROM key_categories WHERE LOWER(name) = LOWER(?) AND id != ? AND deleted_at IS NOT NULL");
+    $stmtDeleted->execute([$name, $id]);
+    $deletedConflict = $stmtDeleted->fetch();
+    if ($deletedConflict) {
+        $stmtRename = $db->prepare("UPDATE key_categories SET name = CONCAT(name, '_eliminata_', id) WHERE id = ?");
+        $stmtRename->execute([$deletedConflict['id']]);
     }
 
     $stmtUpdate = $db->prepare("UPDATE key_categories SET name = ?, description = ?, updated_at = NOW() WHERE id = ?");

@@ -259,8 +259,8 @@ include __DIR__ . '/../includes/layout/header.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <?php if (has_role(ROLE_ADMIN) || has_role(ROLE_GOD)): ?>
-                        <button type="button" class="btn btn-danger me-auto"
+                    <?php if (has_role(ROLE_ADMIN) || has_role(ROLE_GOD) || has_role(ROLE_OPERATOR)): ?>
+                        <button type="button" id="btn-delete-key" class="btn btn-danger me-auto"
                                 onclick="deleteKeyFromModal()"
                                 title="Elimina chiave">
                             <i class="bi bi-trash me-1"></i>Elimina

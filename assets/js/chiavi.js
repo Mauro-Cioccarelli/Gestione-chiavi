@@ -445,6 +445,14 @@ function editKey(keyId, categoryName, identifier) {
                 document.getElementById('edit-key-id').value = key.id;
                 document.getElementById('edit-category').value = key.category_id;
                 document.getElementById('edit-identifier').value = key.identifier;
+
+                const btnDelete = document.getElementById('btn-delete-key');
+                if (btnDelete) {
+                    const inDelivery = key.status === 'in_delivery';
+                    btnDelete.disabled = inDelivery;
+                    btnDelete.title = inDelivery ? 'Impossibile eliminare: chiave in consegna' : 'Elimina chiave';
+                }
+
                 new bootstrap.Modal(document.getElementById('modalEditKey')).show();
             } else {
                 showAlert('danger', 'Chiave non trovata');
@@ -520,9 +528,8 @@ function deleteKeyFromModal() {
         .then(data => {
             if (data.success) {
                 bootstrap.Modal.getInstance(document.getElementById('modalEditKey')).hide();
-                if (window.keysTable) {
-                    window.keysTable.replaceData();
-                }
+                const table = Tabulator.findTable('#keys-table')[0];
+                if (table) table.replaceData();
                 showAlert('success', data.message);
             } else {
                 showAlert('danger', data.error);
