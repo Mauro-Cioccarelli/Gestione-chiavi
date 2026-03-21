@@ -64,9 +64,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const count = cell.getValue();
                     const data = cell.getRow().getData();
                     const stateClass = count > 0 ? "bg-info text-dark cursor-pointer category-keys-badge" : "bg-secondary";
-                    const onClick = count > 0 ? `onclick="openCategoryKeys(${data.id}, '${escapeHtml(data.name)}')"` : '';
+                    const dataAttr = count > 0 ? `data-cat-id="${data.id}" data-cat-name="${escapeHtml(data.name)}"` : '';
 
-                    return `<span class="badge ${stateClass}" ${onClick} style="${count > 0 ? 'cursor:pointer;' : ''}" title="${count > 0 ? 'Clicca per vedere le chiavi' : ''}">${count}</span>`;
+                    return `<span class="badge ${stateClass}" ${dataAttr} style="${count > 0 ? 'cursor:pointer;' : ''}" title="${count > 0 ? 'Clicca per vedere le chiavi' : ''}">${count}</span>`;
                 }
             },
             {
@@ -80,14 +80,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     const data = cell.getRow().getData();
                     let html = '';
 
-                    html += `<button class="btn btn-sm btn-outline-primary me-1"
-                                onclick="openEditCategory(${data.id}, '${escapeHtml(data.name)}', '${escapeHtml(data.description || '')}')"
+                    html += `<button class="btn btn-sm btn-outline-primary me-1 btn-edit-cat"
+                                data-id="${data.id}"
+                                data-name="${escapeHtml(data.name)}"
+                                data-description="${escapeHtml(data.description || '')}"
                                 title="Modifica">
                                 <i class="bi bi-pencil"></i>
                              </button>`;
 
-                    html += `<button class="btn btn-sm btn-outline-danger"
-                                onclick="deleteCategory(${data.id}, '${escapeHtml(data.name)}', ${parseInt(data.keys_count)})"
+                    html += `<button class="btn btn-sm btn-outline-danger btn-delete-cat"
+                                data-id="${data.id}"
+                                data-name="${escapeHtml(data.name)}"
+                                data-keys="${parseInt(data.keys_count)}"
                                 title="Elimina">
                                 <i class="bi bi-trash"></i>
                              </button>`;
@@ -121,6 +125,27 @@ document.addEventListener('DOMContentLoaded', function () {
             { column: "name", dir: "asc" }
         ]
     });
+
+    // Delegated click handlers per bottoni azioni e badge chiavi
+    tableElement.addEventListener('click', function (e) {
+        const editBtn = e.target.closest('.btn-edit-cat');
+        if (editBtn) {
+            e.stopPropagation();
+            openEditCategory(editBtn.dataset.id, editBtn.dataset.name, editBtn.dataset.description);
+            return;
+        }
+        const deleteBtn = e.target.closest('.btn-delete-cat');
+        if (deleteBtn) {
+            e.stopPropagation();
+            deleteCategory(deleteBtn.dataset.id, deleteBtn.dataset.name, parseInt(deleteBtn.dataset.keys));
+            return;
+        }
+        const badge = e.target.closest('.category-keys-badge');
+        if (badge) {
+            e.stopPropagation();
+            openCategoryKeys(badge.dataset.catId, badge.dataset.catName);
+        }
+    }, true);
 
     const FILTER_STORAGE_KEY = 'categorie_filters';
 
