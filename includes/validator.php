@@ -10,10 +10,10 @@ if (!defined('APP_ROOT')) {
 }
 
 /**
- * Sanitizza stringa (rimuove tag HTML e fa escape)
+ * Sanitizza stringa (rimuove tag HTML)
  */
 function sanitize_string(string $input): string {
-    return trim(htmlspecialchars(strip_tags($input), ENT_QUOTES, 'UTF-8'));
+    return trim(strip_tags($input));
 }
 
 /**
