@@ -12,7 +12,7 @@ require_login();
 $canEdit = true;
 
 $pageTitle = 'Gestione Categorie';
-$extraJs = ['/assets/js/categorie.js'];
+$extraJs = ['/assets/js/chiavi.js', '/assets/js/categorie.js'];
 
 // Ottieni categorie per le select del modulo fusione (sarà anche fatto via API o qui)
 $db = db();
@@ -208,6 +208,8 @@ include __DIR__ . '/../includes/layout/header.php';
         </div>
     </div>
 </div>
+
+<?php include __DIR__ . '/../includes/layout/modal_edit_key.php'; ?>
 
 <?php
 echo "<script>

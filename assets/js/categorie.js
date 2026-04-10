@@ -273,6 +273,42 @@ document.addEventListener('DOMContentLoaded', function () {
         setupAjaxForm('form-edit-category', 'modalEditCategory', '/ajax/categorie/update.php', () => { table.replaceData(); reloadCategorySelects(); });
         setupAjaxForm('form-merge-category', 'modalMergeCategory', '/ajax/categorie/merge.php', () => { table.replaceData(); reloadCategorySelects(); });
     }
+
+    // Click sul pulsante modifica chiave nel modal elenco chiavi
+    document.getElementById('category-keys-list').addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-edit-key-from-cat');
+        if (!btn) return;
+        editKey(parseInt(btn.dataset.keyId));
+    });
+
+    // Submit form modifica chiave (chiavi.js fa early-exit su #keys-table, gestisco qui)
+    const formEditKey = document.getElementById('form-edit-key');
+    if (formEditKey) {
+        formEditKey.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            showLoading();
+            fetchJSON(window.APP_URL + '/ajax/chiavi/update.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('modalEditKey')).hide();
+                        showAlert('success', data.message);
+                        formEditKey.reset();
+                        // Ricarica la lista chiavi della categoria corrente
+                        if (window._currentCategoryKeysId) {
+                            openCategoryKeys(window._currentCategoryKeysId, window._currentCategoryKeysName);
+                        }
+                    } else {
+                        showAlert('danger', data.error || 'Si è verificato un errore');
+                    }
+                })
+                .catch(err => showAlert('danger', 'Errore di comunicazione: ' + err.message))
+                .finally(() => hideLoading());
+        });
+    }
 });
 
 // ============================================================================
@@ -349,6 +385,8 @@ window.deleteCategory = function (id, name, keysCount) {
 };
 
 window.openCategoryKeys = function (id, name) {
+    window._currentCategoryKeysId = id;
+    window._currentCategoryKeysName = name;
     document.getElementById('category-keys-title').textContent = name;
 
     const loadingEl = document.getElementById('category-keys-loading');
@@ -393,6 +431,9 @@ window.openCategoryKeys = function (id, name) {
                         </div>
                         <div>
                             ${statusBadge}
+                            <button class="btn btn-sm btn-outline-primary ms-2 btn-edit-key-from-cat" data-key-id="${key.id}" title="Modifica chiave">
+                                <i class="bi bi-pencil"></i>
+                            </button>
                             <a href="${window.APP_URL}/chiavi/storia.php?id=${key.id}" class="btn btn-sm btn-outline-secondary ms-2" title="Vedi Storico" target="_blank">
                                 <i class="bi bi-clock-history"></i>
                             </a>
